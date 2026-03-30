@@ -131,14 +131,14 @@ Vite 開發伺服器會將 `/api` 和 `/chatbot` 請求代理到 `http://localho
 
 ## 設計系統
 
-採用「水墨宣紙」視覺風格，以 CSS 自訂類別實作（`ink-design.css`）：
+統一視覺風格，以 CSS 自訂類別實作（`ink-design.css`）：
 
-- `.ink-wash-bg` — 宣紙質感背景
-- `.ink-header` — 深墨色漸層頭部
-- `.paper-card` — 宣紙風格卡片
+- `.ink-wash-bg` — 背景
+- `.ink-header` — 墨色漸層頭部
+- `.paper-card` — 分欄卡片
 - `.ink-button` / `.gold-button` — 主題按鈕
 - `.seal-corner` — 角落裝飾
 - `.seal-left` — 左側青玉裝飾線
-- `.ink-table` — 水墨風格表格
+- `.ink-table` — 表格
 - `.brush-title` — 筆觸標題裝飾
 - `.cloud-divider` — 雲紋分隔線
