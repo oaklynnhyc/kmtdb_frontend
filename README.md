@@ -135,7 +135,7 @@ Vite 開發伺服器會將 `/api` 和 `/chatbot` 請求代理到 `http://localho
 
 - `.ink-wash-bg` — 宣紙質感背景
 - `.ink-header` — 深墨色漸層頭部
-- `.paper-card` — 宣紙風格卡片
+- `.paper-card` — 卡片分欄
 - `.ink-button` / `.gold-button` — 主題按鈕
 - `.seal-corner` — 角落裝飾
 - `.seal-left` — 左側青玉裝飾線
