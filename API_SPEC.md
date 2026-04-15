@@ -257,7 +257,9 @@ POST /chatbot/query/
 **Response 200：**
 ```json
 {
-  "reply": "根據職名錄資料庫查詢結果，蔣中正曾擔任...",
+  "reply_summary": "蔣中正曾擔任中央執行委員會主席、總裁等職務，橫跨第三屆至第七屆。",
+  "reply_detail": "根據職名錄資料庫查詢結果，蔣中正曾擔任以下職務：\n\n一、中央執行委員會主席（第三屆～第六屆，1929-1949）...\n二、總裁（第六屆起，1938-1975）...\n\n以上資料來源涵蓋職名錄資料庫中共 42 筆相關紀錄...",
+  "reply": "（向下相容欄位，內容同 reply_summary。待前端全面切換後可移除）",
   "sql_jsonl": "[{\"姓名\":\"蔣中正\",\"職位\":\"主席\",...}]",
   "intro_context": "第五屆中央執行委員會概述...",
   "sql_text": "SELECT * FROM ... WHERE 姓名 LIKE '%蔣中正%'",
@@ -265,6 +267,59 @@ POST /chatbot/query/
   "gpdb_params": "（僅 ans_with_gpdb 模式有值）"
 }
 ```
+
+**回覆欄位說明：**
+
+| 欄位 | 說明 |
+|------|------|
+| `reply_summary` | **簡要回覆**：前端預設顯示，簡短摘要（建議 1-3 句） |
+| `reply_detail` | **詳細回覆**：使用者點擊「查看詳細回覆」後展開顯示，包含完整分析與佐證資料 |
+| `reply` | 向下相容欄位，內容同 `reply_summary`。待前端全面切換至 `reply_summary` 後可移除 |
+
+> **前端行為：** 預設顯示 `reply_summary`，下方出現「查看詳細回覆」按鈕。使用者點擊後展開 `reply_detail` 內容。再次點擊可收合。
+
+### 3.2 前端模擬模式（Mock）說明
+
+目前後端 API 尚未就緒，前端內建了一套模擬機制讓 UI 可以獨立運行預覽。**後端串接完成後需移除。**
+
+#### 運作原理
+
+前端透過環境變數 `VITE_API_READY` 控制是否使用模擬資料：
+
+```
+VITE_API_READY 未設定或為空 → 模擬模式（預設）
+VITE_API_READY=true          → 呼叫真實後端 API
+```
+
+模擬模式下，使用者送出訊息後：
+1. 不會發出任何 HTTP 請求
+2. 等待 0.8～1.4 秒模擬後端延遲
+3. 從前端寫死的 `MOCK_REPLIES` 查找對應回覆（常見問題有專屬回覆，其餘問題使用通用模板）
+4. 回傳的訊息包含 `content`（簡要）與 `detailedContent`（詳細），以及模擬的查詢詳情
+
+#### 相關程式碼位置
+
+| 檔案 | 位置 | 內容 | 串接後處理 |
+|------|------|------|-----------|
+| `src/pages/chat-bot.tsx` | `MOCK_REPLIES` 常數（約第 34～98 行） | 5 組常見問題的模擬回覆資料 | **刪除整個常數** |
+| `src/pages/chat-bot.tsx` | `handleSend()` 內 `// ── MOCK START` 至 `// ── MOCK END` 區塊 | 模擬模式判斷與假資料組裝邏輯 | **刪除整個區塊**（保留其下方的 `try/catch`） |
+| `src/services/api.ts` | `ChatResponse` 介面（約第 146～155 行） | 已包含 `reply_summary` 與 `reply_detail` 欄位定義 | **不需修改**，正式邏輯已寫好 |
+
+#### 切換至真實 API 的步驟
+
+1. **確認後端 API 已就緒**（`POST /chatbot/query/` 回傳含 `reply_summary` + `reply_detail`）
+2. **快速驗證**：在專案根目錄建立 `.env` 檔案，加入一行：
+   ```
+   VITE_API_READY=true
+   ```
+   重新啟動 `npm run dev`，此時前端會直接呼叫後端 API
+3. **確認穩定後清理**：刪除以下內容（搜尋 `MOCK` 關鍵字即可快速定位）：
+   - `chat-bot.tsx` 中的 `MOCK_REPLIES` 常數
+   - `chat-bot.tsx` 中 `handleSend()` 內 `MOCK START` ～ `MOCK END` 之間的整個 `if (useMock) { ... }` 區塊
+   - `chat-bot.tsx` 頂部的 `VITE_API_READY` 相關 TODO 註解
+4. 如不需要 `.env` 中的 `VITE_API_READY` 變數，一併刪除
+
+> **注意：** `handleSend()` 中 `MOCK END` 之後的 `try/catch` 區塊是正式的 API 呼叫邏輯，已使用 `data.reply_summary ?? data.reply` 做向下相容處理，**請勿刪除**。
 
 ---
 

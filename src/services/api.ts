@@ -144,7 +144,9 @@ export async function getRecord(id: number | string) {
 // 詳見 API_SPEC.md 第 3 節
 
 export interface ChatResponse {
-  reply: string;
+  reply: string;              // 現有欄位（向下相容）
+  reply_summary: string;      // TODO [後端串接]: 簡要回覆
+  reply_detail: string;       // TODO [後端串接]: 詳細回覆
   sql_jsonl: string;
   intro_context: string;
   sql_text: string;

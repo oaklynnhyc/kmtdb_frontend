@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, Bot, User, ChevronDown, ChevronUp, Database, FileText,
-  PanelLeftClose, PanelLeftOpen, MessageCircle, Check,
+  PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,8 @@ type AnswerType = "ans_summary" | "ans_with_gpdb";
 interface Message {
   id: string;
   role: "user" | "assistant";
-  content: string;
+  content: string;            // 簡要回覆
+  detailedContent?: string;   // 詳細回覆（TODO: 接後端 reply_detail 欄位）
   timestamp: Date;
   queryDetails?: {
     sqlJsonl?: string;
@@ -31,6 +32,31 @@ const FAQ_ITEMS = [
   "可以依職位或單位搜尋嗎？",
 ];
 
+// TODO [後端串接]: 後端 API 就緒後，在 .env 加入 VITE_API_READY=true 即可切換為真實 API，
+//                  確認穩定後刪除整個 MOCK_REPLIES 以及 handleSend 中的 MOCK 區塊。
+const MOCK_REPLIES: Record<string, { summary: string; detail: string }> = {
+  "如何搜尋特定時期的職務資料？": {
+    summary: "您可以使用「名冊檢索」頁面的進階搜尋功能，透過設定起始日期與結束日期來篩選特定時期的職務資料。支援年、月、日三個層級的日期範圍設定。",
+    detail: "以下為搜尋特定時期職務資料的完整操作說明：\n\n一、基本步驟\n\n1. 點擊上方導覽列的「名冊檢索」進入搜尋頁面\n2. 展開「進階檢索」區塊\n3. 在搜尋欄位中選擇「起始日期」或「結束日期」\n4. 輸入目標日期範圍，例如 1924-1937\n5. 可搭配其他條件（如姓名、職位）進一步縮小範圍\n\n二、日期格式\n\n系統支援以下格式：\n• 完整日期：1924-01-30\n• 僅年份：1924\n• 年月：1924-01\n\n三、進階技巧\n\n• 使用 AND 運算子組合多個日期條件，可精確定位「在任期間」\n• 搭配「屆次」欄位可更快找到特定屆期的資料\n• 例如：搜尋「起始日期 >= 1929」AND「結束日期 <= 1935」可找出第三、四屆的任職紀錄",
+  },
+  "請說明典藏系統收錄的資料範圍": {
+    summary: "本系統收錄中國國民黨自 1894 年興中會創立至 1975 年蔣中正逝世期間的組織職名錄資料，涵蓋甲編（改組前各時期）與乙編（改組後各屆中央委員會）。",
+    detail: "本典藏系統的資料範圍詳細說明如下：\n\n一、時間跨度\n\n自 1894 年興中會創立起，至 1975 年為止，涵蓋超過 80 年的組織人事紀錄。\n\n二、甲編：改組前各時期（1894-1924）\n\n• 興中會時期（1894-1905）\n• 中國同盟會時期（1905-1912）\n• 國民黨時期（1912-1914）\n• 中華革命黨時期（1914-1919）\n• 中國國民黨改組前（1919-1924）\n\n三、乙編：改組後各屆（1924-1975）\n\n• 第一屆至第十一屆中央執行委員會\n• 各屆中央監察委員會\n• 中央黨部各部會、委員會\n• 地方黨部重要職務\n\n四、資料欄位\n\n每筆紀錄包含：姓名、別名、組織、一至三級單位、職位、屆次、起訖日期、產生方式等共 22 個欄位。\n\n五、資料來源\n\n主要依據黨史會檔案、歷屆全國代表大會紀錄、中央委員會會議紀錄等原始文獻編纂而成。",
+  },
+  "組織沿革頁面有哪些內容？": {
+    summary: "組織沿革頁面以時間軸方式呈現中國國民黨的組織演變歷程，分為甲編（改組前，1894-1924）與乙編（改組後，1924 起），每個時期可展開查看詳細的組織架構說明。",
+    detail: "組織沿革頁面的完整內容結構如下：\n\n一、甲編：改組前各時期（1894-1924）\n\n依時間順序列出五個主要階段，每個階段包含：\n• 時期名稱與存續年代\n• 組織創立/改組背景\n• 主要領導人與核心組織架構\n• 重要歷史事件與組織變革\n\n二、乙編：改組後各屆中央委員會（1924 起）\n\n依屆次列出各屆資訊，包含：\n• 屆次與任期時間\n• 全國代表大會召開資訊\n• 中央執行委員會組成\n• 下設各部會、委員會架構\n• 該屆重要決議與組織調整\n\n三、頁面功能\n\n• 全部展開/收合：一鍵展開或收合所有時期的詳細內容\n• 各時期可獨立展開收合\n• 時間軸視覺化呈現組織演變脈絡",
+  },
+  "如何正確引用典藏資料？": {
+    summary: "引用本系統資料時，建議標註「國民黨職名錄數位加值系統」作為資料來源，並附上查詢條件與檢索日期。具體引用格式視學術規範而定。",
+    detail: "正確引用典藏資料的建議方式如下：\n\n一、基本引用格式\n\n「國民黨職名錄數位加值系統」，[檢索日期]，查詢條件：[具體條件]。\n\n二、範例\n\n• 學術論文：「據國民黨職名錄數位加值系統查詢（2026年3月27日檢索），蔣中正於第三屆中央執行委員會擔任常務委員會主席（1929-1931）。」\n\n• 註腳格式：國民黨職名錄數位加值系統，檢索日期：2026-03-27，查詢條件：姓名＝蔣中正。\n\n三、注意事項\n\n• 本系統資料僅供研究參考，使用前請自行評估\n• 建議交叉比對原始檔案文獻\n• 如發現資料有誤，歡迎透過系統回報",
+  },
+  "可以依職位或單位搜尋嗎？": {
+    summary: "可以。在名冊檢索頁面的進階搜尋中，您可以選擇「職位」、「一級單位」、「二級單位」或「三級單位」作為搜尋欄位，輸入關鍵字即可查詢。也可組合多個條件進行精確搜尋。",
+    detail: "依職位或單位搜尋的完整說明：\n\n一、依職位搜尋\n\n在進階搜尋中選擇「職位」欄位，輸入如：\n• 「主席」→ 找出所有擔任主席的紀錄\n• 「部長」→ 找出各部部長\n• 「委員」→ 找出所有委員（含常務委員、候補委員等）\n\n二、依單位搜尋\n\n單位分為三個層級：\n• 一級單位：如「中央執行委員會」、「中央監察委員會」\n• 二級單位：如「組織部」、「宣傳部」、「秘書處」\n• 三級單位：如各科、各室\n\n三、組合搜尋範例\n\n• 「一級單位＝中央執行委員會」AND「職位＝常務委員」→ 歷屆常務委員名單\n• 「二級單位＝組織部」AND「職位＝部長」→ 歷任組織部長\n• 「職位＝委員」AND「屆次＝第一屆」→ 第一屆所有委員",
+  },
+};
+
 export function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -45,6 +71,7 @@ export function ChatBot() {
   const [isTyping, setIsTyping] = useState(false);
   const [answerType, setAnswerType] = useState<AnswerType>("ans_summary");
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -82,6 +109,15 @@ export function ChatBot() {
     });
   };
 
+  const toggleReply = (messageId: string) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) next.delete(messageId);
+      else next.add(messageId);
+      return next;
+    });
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
 
@@ -100,12 +136,49 @@ export function ChatBot() {
     // Auto-collapse sidebar on first user message
     if (!hasUserMessage) setSidebarOpen(false);
 
+    // TODO [後端串接]: 移除整個 MOCK 區塊，只保留 try/catch 中的正式邏輯
+    // ── MOCK START ─────────────────────────────────────────
+    const useMock = !import.meta.env.VITE_API_READY;
+    if (useMock) {
+      // 模擬後端延遲
+      await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
+      const mockSummary = MOCK_REPLIES[query]?.summary
+        ?? `根據職名錄資料庫查詢，與「${query}」相關的紀錄共有 17 筆，涵蓋第一屆至第六屆中央執行委員會多個職位。主要集中於中央執行委員會常務委員會及組織部相關單位。`;
+      const mockDetail = MOCK_REPLIES[query]?.detail
+        ?? `以下為「${query}」的詳細分析：\n\n一、相關職務紀錄（共 17 筆）\n\n` +
+           `1. 中央執行委員會 — 常務委員（第一屆～第三屆，1924-1929）\n` +
+           `2. 中央執行委員會 組織部 — 部長（第三屆，1929-1931）\n` +
+           `3. 中央執行委員會 — 委員（第四屆～第六屆，1931-1945）\n` +
+           `4. 中央監察委員會 — 常務監察委員（第四屆，1931-1935）\n\n` +
+           `二、任職時間軸\n\n最早紀錄始於 1924 年第一次全國代表大會，末筆紀錄止於 1945 年第六屆中央執行委員會屆滿。跨越國民黨改組、北伐、訓政及抗戰等重要時期。\n\n` +
+           `三、資料來源\n\n以上資料來源涵蓋職名錄資料庫中相關紀錄，並交叉比對各屆次前言與組織沿革資訊。如需進一步查詢特定職位的完整歷史紀錄，請提供更具體的搜尋條件。`;
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: mockSummary,
+        detailedContent: mockDetail,
+        timestamp: new Date(),
+        queryDetails: {
+          sqlJsonl: '[{"姓名":"模擬資料","職位":"委員","屆次":"第一屆"}]',
+          introContext: "第一屆中央執行委員會概述（模擬資料）",
+          sqlText: "SELECT * FROM roster WHERE 姓名 LIKE '%...%' （模擬）",
+        },
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsTyping(false);
+      return;
+    }
+    // ── MOCK END ───────────────────────────────────────────
+
     try {
       const data = await chatbotQuery(query, answerType);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.reply,
+        // TODO [後端串接]: 將 data.reply 改為 data.reply_summary
+        content: data.reply_summary ?? data.reply,
+        // TODO [後端串接]: 後端實作 reply_detail 後此處自動生效
+        detailedContent: data.reply_detail,
         timestamp: new Date(),
         queryDetails: {
           sqlJsonl: data.sql_jsonl,
@@ -274,9 +347,37 @@ export function ChatBot() {
                             : "paper-card"
                         }`}
                       >
+                        {/* 簡要回覆（預設顯示） */}
                         <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
                           {message.content}
                         </p>
+
+                        {/* 詳細回覆（展開後顯示） */}
+                        {message.detailedContent && (
+                          <>
+                            {expandedReplies.has(message.id) && (
+                              <div className="mt-3 pt-3 border-t border-gray-200/60">
+                                <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+                                  {message.detailedContent}
+                                </p>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => toggleReply(message.id)}
+                              className={`mt-2.5 flex items-center space-x-1.5 text-xs font-medium transition-colors ${
+                                expandedReplies.has(message.id)
+                                  ? "text-gray-400 hover:text-gray-600"
+                                  : "text-[var(--jade)] hover:text-[#128c7e]"
+                              }`}
+                            >
+                              {expandedReplies.has(message.id) ? (
+                                <><ChevronsDownUp className="w-3.5 h-3.5" /><span>收合詳細回覆</span></>
+                              ) : (
+                                <><ChevronsUpDown className="w-3.5 h-3.5" /><span>查看詳細回覆</span></>
+                              )}
+                            </button>
+                          </>
+                        )}
                       </div>
                       {/* Query details collapsible */}
                       {hasAnyDetail(message.queryDetails) && (
