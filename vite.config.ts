@@ -31,7 +31,7 @@ function copyIndexHtmlPlugin() {
 }
 
 // VITE_BASE_PATH: 部署前綴
-//   地端（這台）：不設定（預設 ''），服務於 /
+//   地端：不設定（預設 ''），服務於 /
 //   iaic 機器：VITE_BASE_PATH=/kmtdb，服務於 /kmtdb/
 const basePath = process.env.VITE_BASE_PATH ?? '';
 
