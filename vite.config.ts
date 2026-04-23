@@ -30,6 +30,11 @@ function copyIndexHtmlPlugin() {
   };
 }
 
+// VITE_BASE_PATH: 部署前綴
+//   地端（這台）：不設定（預設 ''），服務於 /
+//   iaic 機器：VITE_BASE_PATH=/kmtdb，服務於 /kmtdb/
+const basePath = process.env.VITE_BASE_PATH ?? '';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -41,8 +46,7 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  // 靜態資源基礎路徑：對應 Django STATIC_URL + 'spa/'
-  base: '/static/spa/',
+  base: basePath ? `${basePath}/static/spa/` : '/static/spa/',
   build: {
     outDir: resolve(__dirname, '../static/spa'),
     emptyOutDir: true,
@@ -55,10 +59,8 @@ export default defineConfig({
     },
   },
   server: {
-    // 開發模式代理：將 API 請求轉發到 Django 後端
-    proxy: {
-      '/api': 'http://localhost:8000',
-      '/chatbot': 'http://localhost:8000',
-    },
+    proxy: basePath
+      ? { [`${basePath}/api`]: 'http://localhost:8000', [`${basePath}/chatbot`]: 'http://localhost:8000' }
+      : { '/api': 'http://localhost:8000', '/chatbot': 'http://localhost:8000' },
   },
 });

@@ -9,6 +9,11 @@
  * - 所有請求帶 credentials: 'include'
  */
 
+// ---------- 設定 ----------
+
+// VITE_BASE_PATH: 地端為空（預設），iaic 機器設為 '/kmtdb'
+const BASE = import.meta.env.VITE_BASE_PATH ?? '';
+
 // ---------- 工具函式 ----------
 
 function getCsrfToken(): string {
@@ -52,7 +57,7 @@ export class AuthError extends Error {
 // 詳見 API_SPEC.md 第 1 節
 
 export async function login(username: string, password: string) {
-  return apiFetch<{ username: string; is_staff: boolean }>('/api/auth/login/', {
+  return apiFetch<{ username: string; is_staff: boolean }>(`${BASE}/api/auth/login/`, {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
@@ -61,12 +66,12 @@ export async function login(username: string, password: string) {
 export async function checkAuthStatus() {
   // 不使用 apiFetch：未登入時後端回 200 + {authenticated: false}
   // 若使用 apiFetch，萬一後端誤回 401 會導致 AuthProvider 初始化失敗
-  const response = await fetch('/api/auth/status/', { credentials: 'include' });
+  const response = await fetch(`${BASE}/api/auth/status/`, { credentials: 'include' });
   return response.json() as Promise<{ authenticated: boolean; username: string | null }>;
 }
 
 export async function logout() {
-  return apiFetch<{ success: boolean }>('/api/auth/logout/', {
+  return apiFetch<{ success: boolean }>(`${BASE}/api/auth/logout/`, {
     method: 'POST',
   });
 }
@@ -130,14 +135,14 @@ export async function searchRecords(params: SearchParams) {
   if (params.pageSize) urlParams.set('page_size', String(params.pageSize));
   if (params.viewType) urlParams.set('view_type', params.viewType);
 
-  return apiFetch<PaginatedResponse<Record<string, any>>>(`/api/search/?${urlParams.toString()}`);
+  return apiFetch<PaginatedResponse<Record<string, any>>>(`${BASE}/api/search/?${urlParams.toString()}`);
 }
 
 // ========== 單筆紀錄 API ==========
 // 詳見 API_SPEC.md 第 2.2 節
 
 export async function getRecord(id: number | string) {
-  return apiFetch<Record<string, any>>(`/api/records/${id}/`);
+  return apiFetch<Record<string, any>>(`${BASE}/api/records/${id}/`);
 }
 
 // ========== 聊天機器人 API ==========
@@ -155,7 +160,7 @@ export interface ChatResponse {
 }
 
 export async function chatbotQuery(message: string, answerType: string = 'ans_summary') {
-  return apiFetch<ChatResponse>('/chatbot/query/', {
+  return apiFetch<ChatResponse>(`${BASE}/chatbot/query/`, {
     method: 'POST',
     body: JSON.stringify({ message, answer_type: answerType }),
   });
