@@ -11,10 +11,12 @@ type AnswerType = "ans_summary" | "ans_with_gpdb";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;            // 簡要回覆
   detailedContent?: string;   // 詳細回覆（TODO: 接後端 reply_detail 欄位）
   timestamp: Date;
+  mode?: AnswerType;          // 此則回覆所使用的回答模式（僅 assistant 訊息）
+  type?: "modeSwitch";        // 系統訊息類型（例如模式切換分隔線）
   queryDetails?: {
     sqlJsonl?: string;
     introContext?: string;
@@ -23,6 +25,11 @@ interface Message {
     gpdbResult?: string;
   };
 }
+
+const MODE_META: Record<AnswerType, { label: string; color: string; tint: string; icon: typeof FileText }> = {
+  ans_summary: { label: "統整式", color: "#16a085", tint: "rgba(22, 160, 133, 0.08)", icon: FileText },
+  ans_with_gpdb: { label: "官職資料庫", color: "#d4af37", tint: "rgba(212, 175, 55, 0.1)", icon: Database },
+};
 
 const FAQ_ITEMS = [
   "如何搜尋特定時期的職務資料？",
@@ -74,6 +81,7 @@ export function ChatBot() {
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<AnswerType | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasUserMessage = messages.some((m) => m.role === "user");
@@ -90,9 +98,35 @@ export function ChatBot() {
   }, [modelDropdownOpen]);
 
   const selectMode = useCallback((mode: AnswerType) => {
-    setAnswerType(mode);
     setModelDropdownOpen(false);
-  }, []);
+    if (mode === answerType) return;
+    // 尚無對話時（只有歡迎語）直接切換，不彈提示
+    if (!hasUserMessage) {
+      setAnswerType(mode);
+      return;
+    }
+    setPendingMode(mode);
+  }, [answerType, hasUserMessage]);
+
+  const confirmModeSwitch = useCallback(() => {
+    if (!pendingMode) return;
+    const newMode = pendingMode;
+    setAnswerType(newMode);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `sys-${Date.now()}`,
+        role: "system",
+        type: "modeSwitch",
+        content: "",
+        mode: newMode,
+        timestamp: new Date(),
+      },
+    ]);
+    setPendingMode(null);
+  }, [pendingMode]);
+
+  const cancelModeSwitch = useCallback(() => setPendingMode(null), []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -158,6 +192,7 @@ export function ChatBot() {
         content: mockSummary,
         detailedContent: mockDetail,
         timestamp: new Date(),
+        mode: answerType,
         queryDetails: {
           sqlJsonl: '[{"姓名":"模擬資料","職位":"委員","屆次":"第一屆"}]',
           introContext: "第一屆中央執行委員會概述（模擬資料）",
@@ -180,6 +215,7 @@ export function ChatBot() {
         // TODO [後端串接]: 後端實作 reply_detail 後此處自動生效
         detailedContent: data.reply_detail,
         timestamp: new Date(),
+        mode: answerType,
         queryDetails: {
           sqlJsonl: data.sql_jsonl,
           introContext: data.intro_context,
@@ -257,7 +293,7 @@ export function ChatBot() {
           </div>
 
           {/* 回答模式說明（純展示，不可選取） */}
-          <div className="px-5 py-4 border-t border-white/10">
+          {/* <div className="px-5 py-4 border-t border-white/10">
             <h3 className="text-[11px] uppercase tracking-widest text-gray-400 mb-2.5">回答模式</h3>
             <div className="space-y-1.5">
               <div
@@ -287,7 +323,7 @@ export function ChatBot() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </aside>
 
@@ -316,7 +352,30 @@ export function ChatBot() {
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full ink-scrollbar" ref={scrollRef}>
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-4">
-              {messages.map((message) => (
+              {messages.map((message) => {
+                if (message.type === "modeSwitch" && message.mode) {
+                  const meta = MODE_META[message.mode];
+                  const Icon = meta.icon;
+                  return (
+                    <div key={message.id} className="flex items-center gap-3 py-2 select-none">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-200" />
+                      <div
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium"
+                        style={{
+                          color: meta.color,
+                          backgroundColor: meta.tint,
+                          boxShadow: `inset 0 0 0 1px ${meta.color}33`,
+                        }}
+                      >
+                        <Icon className="w-3 h-3" />
+                        <span>已切換至「{meta.label}」模式</span>
+                        <span className="text-gray-400 font-normal">· 對話記憶已重置</span>
+                      </div>
+                      <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200" />
+                    </div>
+                  );
+                }
+                return (
                 <div
                   key={message.id}
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -346,7 +405,39 @@ export function ChatBot() {
                             ? "bg-gradient-to-br from-[#e8d4a0]/20 to-[#d4af37]/30 border border-[#d4af37]/30"
                             : "paper-card"
                         }`}
+                        style={
+                          message.mode === "ans_summary"
+                            ? { borderLeftWidth: "4px", borderLeftColor: "#16a085" }
+                            : message.mode === "ans_with_gpdb"
+                            ? { borderLeftWidth: "4px", borderLeftColor: "#d4af37" }
+                            : undefined
+                        }
                       >
+                        {/* 模式徽章（僅 assistant 且有模式資訊時顯示）
+                        {message.mode && (
+                          <div className="mb-2.5">
+                            <span
+                              className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                message.mode === "ans_summary"
+                                  ? "text-[#16a085] bg-[#16a085]/10 ring-1 ring-[#16a085]/25"
+                                  : "text-[#96852a] bg-[#d4af37]/12 ring-1 ring-[#d4af37]/30"
+                              }`}
+                            >
+                              {message.mode === "ans_summary" ? (
+                                <>
+                                  <FileText className="w-2.5 h-2.5" />
+                                  <span>統整式</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Database className="w-2.5 h-2.5" />
+                                  <span>官職資料庫</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        )} */}
+
                         {/* 簡要回覆（預設顯示） */}
                         <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
                           {message.content}
@@ -435,7 +526,8 @@ export function ChatBot() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="flex space-x-3">
@@ -505,7 +597,7 @@ export function ChatBot() {
                           <span className="text-sm font-medium ink-text">統整式回答</span>
                           {answerType === "ans_summary" && <Check className="w-4 h-4 text-[var(--jade)]" />}
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">查詢職名錄資料庫，速度較快</p>
+                        <p className="text-xs text-gray-500 mt-0.5">使用中國國民黨職名錄資料庫，查詢速度較快</p>
                       </div>
                     </button>
                     <div className="mx-4 h-px bg-gray-100" />
@@ -545,6 +637,69 @@ export function ChatBot() {
           </div>
         </div>
       </div>
+
+      {/* 切換模式確認對話框 */}
+      {pendingMode && (() => {
+        const meta = MODE_META[pendingMode];
+        const Icon = meta.icon;
+        return (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center px-4 animate-in fade-in duration-150"
+            style={{ backgroundColor: "rgba(44, 62, 80, 0.42)", backdropFilter: "blur(4px)" }}
+            onClick={cancelModeSwitch}
+          >
+            <div
+              className="paper-card rounded-xl w-full max-w-sm p-6 relative"
+              style={{ boxShadow: "0 20px 60px rgba(44, 62, 80, 0.25), 0 4px 12px rgba(44, 62, 80, 0.1)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 頂部色條 */}
+              <div
+                className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl"
+                style={{ background: `linear-gradient(to right, transparent, ${meta.color}, transparent)` }}
+              />
+
+              <div className="flex items-start space-x-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: meta.tint, color: meta.color }}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <h3 className="text-base font-medium ink-text">切換回覆模式</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Switch reply mode</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-700 leading-relaxed mb-5">
+                即將切換至「<span style={{ color: meta.color, fontWeight: 500 }}>{meta.label}</span>」模式。
+                <br />
+                切換後，助理的<span className="font-medium">對話記憶將重置</span>，不會保留先前問答的上下文記憶。
+              </p>
+
+              <div className="flex items-center justify-end space-x-2">
+                <button
+                  onClick={cancelModeSwitch}
+                  className="px-4 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmModeSwitch}
+                  className="px-4 py-1.5 rounded-md text-sm font-medium text-white transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: meta.color,
+                    boxShadow: `0 2px 8px ${meta.color}40`,
+                  }}
+                >
+                  確認切換
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

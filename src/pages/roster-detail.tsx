@@ -85,7 +85,6 @@ export function RosterDetail() {
             </button>
           </Link>
           <h1 className="text-3xl mb-2">職名錄詳細資料</h1>
-          <p className="text-gray-200">ID: {record.id}</p>
         </div>
         <div className="bottom-ink-wash"></div>
       </div>

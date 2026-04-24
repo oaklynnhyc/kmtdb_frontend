@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -51,26 +51,53 @@ const fieldGroups = {
   ],
 };
 
-export function RosterSearch() {
-  const [quickSearchTab, setQuickSearchTab] = useState('all');
-  const [allFieldsQuery, setAllFieldsQuery] = useState('');
-  const [nameQuery, setNameQuery] = useState('');
-  const [positionQuery, setPositionQuery] = useState('');
-  const [timeStartYear, setTimeStartYear] = useState('');
-  const [timeEndYear, setTimeEndYear] = useState('');
+const STORAGE_KEY = 'rosterSearchState';
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [advancedConditions, setAdvancedConditions] = useState<QueryCondition[]>([
-    { id: 'default-1', field: 'name', operator: 'contains', value: '', logicOperator: 'AND' },
-  ]);
+function loadStoredState(): any {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function RosterSearch() {
+  const stored = loadStoredState();
+
+  const [quickSearchTab, setQuickSearchTab] = useState<string>(stored?.quickSearchTab ?? 'all');
+  const [allFieldsQuery, setAllFieldsQuery] = useState<string>(stored?.allFieldsQuery ?? '');
+  const [nameQuery, setNameQuery] = useState<string>(stored?.nameQuery ?? '');
+  const [positionQuery, setPositionQuery] = useState<string>(stored?.positionQuery ?? '');
+  const [timeStartYear, setTimeStartYear] = useState<string>(stored?.timeStartYear ?? '');
+  const [timeEndYear, setTimeEndYear] = useState<string>(stored?.timeEndYear ?? '');
+
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(stored?.showAdvanced ?? false);
+  const [advancedConditions, setAdvancedConditions] = useState<QueryCondition[]>(
+    stored?.advancedConditions ?? [
+      { id: 'default-1', field: 'name', operator: 'contains', value: '', logicOperator: 'AND' },
+    ]
+  );
 
   // API 狀態
-  const [results, setResults] = useState<RosterRecord[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [results, setResults] = useState<RosterRecord[]>(stored?.results ?? []);
+  const [totalCount, setTotalCount] = useState<number>(stored?.totalCount ?? 0);
+  const [currentPage, setCurrentPage] = useState<number>(stored?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(stored?.hasSearched ?? false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        quickSearchTab, allFieldsQuery, nameQuery, positionQuery,
+        timeStartYear, timeEndYear, showAdvanced, advancedConditions,
+        results, totalCount, currentPage, hasSearched,
+      }));
+    } catch {}
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear,
+      timeEndYear, showAdvanced, advancedConditions, results, totalCount,
+      currentPage, hasSearched]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -142,8 +169,8 @@ export function RosterSearch() {
         queryFields: hasTextSearch ? queryFields : ['全欄位'],
         searchValues: hasTextSearch ? searchValues : [''],
         searchOperators: hasTextSearch ? searchOperators : ['and'],
-        startYears: hasTimeSearch ? [timeStartYear || ''] : undefined,
-        endYears: hasTimeSearch ? [timeEndYear || ''] : undefined,
+        startYears: hasTimeSearch ? [timeStartYear ? timeStartYear.slice(0, 4) : ''] : undefined,
+        endYears: hasTimeSearch ? [timeEndYear ? timeEndYear.slice(0, 4) : ''] : undefined,
         dateOperators: hasTimeSearch ? ['and'] : undefined,
         page,
         pageSize,
@@ -213,7 +240,7 @@ export function RosterSearch() {
                     { key: 'all', label: '全欄位' },
                     { key: 'person', label: '人物姓名' },
                     { key: 'position', label: '職位' },
-                    { key: 'time', label: '任職時間' },
+                    { key: 'time', label: '時間' },
                   ].map(tab => (
                     <button
                       key={tab.key}
@@ -227,8 +254,8 @@ export function RosterSearch() {
                 </div>
               </div>
               <TabsContent value="all" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">可輸入姓名、職位、年份等關鍵字進行查詢</p>
-                <Input placeholder="例如：孫中山、主席、1924" value={allFieldsQuery}
+                <p className="text-sm text-gray-600 mb-2">以關鍵字對資料庫進行查詢</p>
+                <Input placeholder="例如：孫中山 興中會 文化工作會" value={allFieldsQuery}
                   onChange={e => setAllFieldsQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="person" className="mt-4">
@@ -238,21 +265,27 @@ export function RosterSearch() {
               </TabsContent>
               <TabsContent value="position" className="mt-4">
                 <p className="text-sm text-gray-600 mb-2">輸入職位名稱進行查詢</p>
-                <Input placeholder="例如：主席、部長、委員" value={positionQuery}
+                <Input placeholder="例如：主席 部長 委員" value={positionQuery}
                   onChange={e => setPositionQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="time" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">輸入任職時間範圍（年份）進行查詢</p>
+                <p className="text-sm text-gray-600 mb-2">選擇任職時間範圍進行查詢</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm ink-text mb-2 font-medium">起始年份</label>
-                    <Input placeholder="例如：1924" value={timeStartYear}
-                      onChange={e => setTimeStartYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                    <label className="block text-sm ink-text mb-2 font-medium">起始日期</label>
+                    <div className="date-input-wrapper">
+                      <Input type="date" value={timeStartYear}
+                        onChange={e => setTimeStartYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                      <Calendar className="date-input-icon w-4 h-4" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm ink-text mb-2 font-medium">結束年份</label>
-                    <Input placeholder="例如：1926" value={timeEndYear}
-                      onChange={e => setTimeEndYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                    <label className="block text-sm ink-text mb-2 font-medium">結束日期</label>
+                    <div className="date-input-wrapper">
+                      <Input type="date" value={timeEndYear}
+                        onChange={e => setTimeEndYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                      <Calendar className="date-input-icon w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -296,7 +329,14 @@ export function RosterSearch() {
                     ) : <div className="w-32" />}
 
                     <Select value={condition.field}
-                      onValueChange={value => updateCondition(condition.id, { field: value })}>
+                      onValueChange={value => {
+                        const prevIsDate = condition.field === 'startDate' || condition.field === 'endDate';
+                        const nextIsDate = value === 'startDate' || value === 'endDate';
+                        updateCondition(condition.id, {
+                          field: value,
+                          ...(prevIsDate !== nextIsDate ? { value: '' } : {}),
+                        });
+                      }}>
                       <SelectTrigger className="w-64 border-neutral-300"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(fieldGroups).map(([groupName, fields]) => (
@@ -310,9 +350,18 @@ export function RosterSearch() {
                       </SelectContent>
                     </Select>
 
-                    <Input placeholder="輸入查詢內容" value={condition.value}
-                      onChange={e => updateCondition(condition.id, { value: e.target.value })}
-                      onKeyDown={handleKeyDown} className="flex-1 border-neutral-300" />
+                    {condition.field === 'startDate' || condition.field === 'endDate' ? (
+                      <div className="date-input-wrapper flex-1">
+                        <Input type="date" value={condition.value}
+                          onChange={e => updateCondition(condition.id, { value: e.target.value })}
+                          onKeyDown={handleKeyDown} className="border-neutral-300" />
+                        <Calendar className="date-input-icon w-4 h-4" />
+                      </div>
+                    ) : (
+                      <Input placeholder="輸入查詢內容" value={condition.value}
+                        onChange={e => updateCondition(condition.id, { value: e.target.value })}
+                        onKeyDown={handleKeyDown} className="flex-1 border-neutral-300" />
+                    )}
 
                     <Button variant="ghost" size="sm" onClick={() => removeCondition(condition.id)}
                       className="text-neutral-600 hover:text-red-600">
@@ -371,7 +420,7 @@ export function RosterSearch() {
               <table className="w-full text-sm ink-table">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">ID</th>
+                    <th className="sticky left-0 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">序號</th>
                     <th className="sticky left-16 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">姓名</th>
                     <th className="px-4 py-3 text-left font-medium">組織</th>
                     <th className="px-4 py-3 text-left font-medium">一級單位</th>
@@ -382,9 +431,9 @@ export function RosterSearch() {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map(record => (
+                  {results.map((record, index) => (
                     <tr key={record.id}>
-                      <td className="sticky left-0 bg-white px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600">{record.id}</td>
+                      <td className="sticky left-0 bg-white px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600">{(currentPage - 1) * pageSize + index + 1}</td>
                       <td className="sticky left-16 bg-white px-4 py-3 border-r border-gray-200 font-medium ink-text">
                         <Link to={`/roster/${record.id}`} className="hover:text-[#16a085] hover:underline transition-colors">
                           {record.name}
@@ -432,7 +481,15 @@ export function RosterSearch() {
         {/* Initial state - no search yet */}
         {!isLoading && !hasSearched && (
           <div className="paper-card rounded-lg p-12 text-center">
-            <SearchIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <button
+              type="button"
+              onClick={handleSearch}
+              disabled={isLoading}
+              aria-label="搜尋"
+              className="block mx-auto mb-4 text-gray-300 hover:text-[#16a085] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <SearchIcon className="w-16 h-16" />
+            </button>
             <p className="text-base ink-text">請輸入查詢條件並點擊搜尋</p>
             <p className="mt-2 text-sm text-gray-500">支援全欄位、姓名、職位、時間範圍等多種搜尋方式</p>
           </div>

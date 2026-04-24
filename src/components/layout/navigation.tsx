@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/auth-context';
 export function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, username } = useAuth();
+  const { logout } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -116,10 +116,7 @@ export function Navigation() {
             {/* Separator */}
             <div className="w-px h-6 bg-white/20 mx-1"></div>
 
-            {/* User & Logout */}
-            {username && (
-              <span className="text-sm text-gray-300 px-2">{username}</span>
-            )}
+            {/* Logout */}
             <button
               onClick={handleLogout}
               className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-white/10 transition-all text-gray-300 hover:text-white"
