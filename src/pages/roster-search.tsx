@@ -6,9 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { searchRecords, type PaginatedResponse } from '@/services/api';
-import { mapDjangoToRoster, toDjangoSearchField, toDjangoOperator } from '@/services/field-mapping';
-import type { RosterRecord } from '@/types/roster';
+import { searchRecords, getColumns, type PaginatedResponse, type ColumnConfig } from '@/services/api';
+// mapDjangoToRoster / RosterRecord 不再用於搜尋結果（改為原始資料 + 動態欄位），roster-detail.tsx 仍使用
+import { toDjangoSearchField, toDjangoOperator } from '@/services/field-mapping';
 
 interface QueryCondition {
   id: string;
@@ -54,6 +54,15 @@ const fieldGroups = {
 
 const STORAGE_KEY = 'rosterSearchState';
 
+const DEFAULT_LIST_COLUMNS: ColumnConfig[] = [
+  { column_name: '組織',    field_name: '組織',    display_label: '組織',    sort_order_list: 1, sort_order_detail: 1 },
+  { column_name: '一級單位', field_name: '一級單位', display_label: '一級單位', sort_order_list: 2, sort_order_detail: 2 },
+  { column_name: '二級單位', field_name: '二級單位', display_label: '二級單位', sort_order_list: 3, sort_order_detail: 3 },
+  { column_name: '三級單位', field_name: '三級單位', display_label: '三級單位', sort_order_list: 4, sort_order_detail: 4 },
+  { column_name: '職位',    field_name: '職位',    display_label: '職位',    sort_order_list: 5, sort_order_detail: 5 },
+  { column_name: '屆次',    field_name: '屆次',    display_label: '屆次',    sort_order_list: 6, sort_order_detail: 6 },
+];
+
 function loadStoredState(): any {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -80,8 +89,17 @@ export function RosterSearch() {
     ]
   );
 
+  // 欄位顯示設定
+  const [listColumns, setListColumns] = useState<ColumnConfig[]>(stored?.listColumns ?? []);
+
+  useEffect(() => {
+    getColumns()
+      .then(data => setListColumns(data.list))
+      .catch(() => {});
+  }, []);
+
   // API 狀態
-  const [results, setResults] = useState<RosterRecord[]>(stored?.results ?? []);
+  const [results, setResults] = useState<Record<string, any>[]>(stored?.results ?? []);
   const [totalCount, setTotalCount] = useState<number>(stored?.totalCount ?? 0);
   const [currentPage, setCurrentPage] = useState<number>(stored?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,40 +142,66 @@ export function RosterSearch() {
   };
 
   const performSearch = useCallback(async (page: number = 1) => {
-    // 建構搜尋參數
     const queryFields: string[] = [];
     const searchValues: string[] = [];
     const searchOperators: string[] = [];
 
-    // 快速搜尋
+    const parseDate = (d: string) => ({
+      year:  d ? d.slice(0, 4) : '',
+      month: d && d.length >= 7 ? d.slice(5, 7) : '',
+      day:   d && d.length >= 10 ? d.slice(8, 10) : '',
+    });
+
+    // 空格拆分成多個 OR 條件；第一個保留原 operator，後續改為 or
+    const pushExpanded = (field: string, rawValue: string, firstOp: string) => {
+      const tokens = rawValue.trim().split(/\s+/).filter(Boolean);
+      tokens.forEach((token, i) => {
+        queryFields.push(field);
+        searchValues.push(token);
+        searchOperators.push(i === 0 ? firstOp : 'or');
+      });
+    };
+
+    // 快速搜尋（文字）
     if (quickSearchTab === 'all' && allFieldsQuery.trim()) {
-      queryFields.push('全欄位');
-      searchValues.push(allFieldsQuery.trim());
-      searchOperators.push('and');
+      pushExpanded('全欄位', allFieldsQuery, 'and');
     } else if (quickSearchTab === 'person' && nameQuery.trim()) {
-      queryFields.push('姓名_別名');
-      searchValues.push(nameQuery.trim());
-      searchOperators.push('and');
+      pushExpanded('姓名_別名', nameQuery, 'and');
     } else if (quickSearchTab === 'position' && positionQuery.trim()) {
-      queryFields.push('職位');
-      searchValues.push(positionQuery.trim());
-      searchOperators.push('and');
+      pushExpanded('職位', positionQuery, 'and');
     }
 
-    // 進階搜尋條件
+    // 進階搜尋：startDate/endDate 走日期路徑，其餘走文字路徑
+    type DateSlot = { sY: string; sM: string; sD: string; eY: string; eM: string; eD: string; op: string };
+    const advDateSlots: DateSlot[] = [];
+
     advancedConditions.forEach(c => {
-      if (c.value.trim()) {
-        queryFields.push(toDjangoSearchField(c.field));
-        searchValues.push(c.value.trim());
-        searchOperators.push(toDjangoOperator(c.logicOperator));
+      if ((c.field === 'startDate' || c.field === 'endDate') && c.value.trim()) {
+        const d = parseDate(c.value);
+        const isStart = c.field === 'startDate';
+        advDateSlots.push({
+          sY: isStart ? d.year  : '', sM: isStart ? d.month : '', sD: isStart ? d.day : '',
+          eY: isStart ? ''      : d.year,  eM: isStart ? ''      : d.month, eD: isStart ? '' : d.day,
+          op: toDjangoOperator(c.logicOperator),
+        });
+      } else if (c.value.trim()) {
+        pushExpanded(toDjangoSearchField(c.field), c.value, toDjangoOperator(c.logicOperator));
       }
     });
 
-    // 如果沒有任何搜尋條件（且不是時間搜尋），不發 API
-    const hasTextSearch = queryFields.length > 0;
-    const hasTimeSearch = quickSearchTab === 'time' && (timeStartYear || timeEndYear);
+    // 快速搜尋時間 tab + 進階搜尋日期條件合併
+    const allDateSlots: DateSlot[] = [];
+    if (quickSearchTab === 'time' && (timeStartYear || timeEndYear)) {
+      const s = parseDate(timeStartYear);
+      const e = parseDate(timeEndYear);
+      allDateSlots.push({ sY: s.year, sM: s.month, sD: s.day, eY: e.year, eM: e.month, eD: e.day, op: 'and' });
+    }
+    allDateSlots.push(...advDateSlots);
 
-    if (!hasTextSearch && !hasTimeSearch) {
+    const hasTextSearch = queryFields.length > 0;
+    const hasDateSearch = allDateSlots.length > 0;
+
+    if (!hasTextSearch && !hasDateSearch) {
       setError('請至少輸入一個搜尋條件');
       return;
     }
@@ -170,15 +214,18 @@ export function RosterSearch() {
         queryFields: hasTextSearch ? queryFields : ['全欄位'],
         searchValues: hasTextSearch ? searchValues : [''],
         searchOperators: hasTextSearch ? searchOperators : ['and'],
-        startYears: hasTimeSearch ? [timeStartYear ? timeStartYear.slice(0, 4) : ''] : undefined,
-        endYears: hasTimeSearch ? [timeEndYear ? timeEndYear.slice(0, 4) : ''] : undefined,
-        dateOperators: hasTimeSearch ? ['and'] : undefined,
+        startYears:    hasDateSearch ? allDateSlots.map(s => s.sY) : undefined,
+        startMonths:   hasDateSearch ? allDateSlots.map(s => s.sM) : undefined,
+        startDays:     hasDateSearch ? allDateSlots.map(s => s.sD) : undefined,
+        endYears:      hasDateSearch ? allDateSlots.map(s => s.eY) : undefined,
+        endMonths:     hasDateSearch ? allDateSlots.map(s => s.eM) : undefined,
+        endDays:       hasDateSearch ? allDateSlots.map(s => s.eD) : undefined,
+        dateOperators: hasDateSearch ? allDateSlots.map(s => s.op) : undefined,
         page,
         pageSize,
       });
 
-      const mapped = data.results.map(mapDjangoToRoster);
-      setResults(mapped);
+      setResults(data.results as Record<string, any>[]);
       setTotalCount(data.count);
       setCurrentPage(page);
       setHasSearched(true);
@@ -420,34 +467,30 @@ export function RosterSearch() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm ink-table">
                 <thead>
+                  {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return (
                   <tr>
                     <th className="sticky left-0 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">序號</th>
                     <th className="sticky left-16 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">姓名</th>
-                    <th className="px-4 py-3 text-left font-medium">組織</th>
-                    <th className="px-4 py-3 text-left font-medium">一級單位</th>
-                    <th className="px-4 py-3 text-left font-medium">二級單位</th>
-                    <th className="px-4 py-3 text-left font-medium">三級單位</th>
-                    <th className="px-4 py-3 text-left font-medium">職位</th>
-                    <th className="px-4 py-3 text-left font-medium">屆次</th>
+                    {cols.map(col => (
+                      <th key={col.field_name} className="px-4 py-3 text-left font-medium whitespace-nowrap">{col.display_label}</th>
+                    ))}
                   </tr>
+                  ); })()}
                 </thead>
                 <tbody>
-                  {results.map((record, index) => (
+                  {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return results.map((record, index) => (
                     <tr key={record.id}>
                       <td className="sticky left-0 bg-white px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600">{(currentPage - 1) * pageSize + index + 1}</td>
                       <td className="sticky left-16 bg-white px-4 py-3 border-r border-gray-200 font-medium ink-text">
                         <Link to={`/roster/${record.id}`} className="hover:text-[#16a085] hover:underline transition-colors">
-                          {record.name}
+                          {record['姓名']}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{record.organization || '—'}</td>
-                      <td className="px-4 py-3 text-gray-700">{record.unit1 || '—'}</td>
-                      <td className="px-4 py-3 text-gray-700">{record.unit2 || '—'}</td>
-                      <td className="px-4 py-3 text-gray-700">{record.unit3 || '—'}</td>
-                      <td className="px-4 py-3 text-gray-700">{record.position || '—'}</td>
-                      <td className="px-4 py-3 text-gray-700">{record.term || '—'}</td>
+                      {cols.map(col => (
+                        <td key={col.field_name} className="px-4 py-3 text-gray-700">{record[col.field_name] || '—'}</td>
+                      ))}
                     </tr>
-                  ))}
+                  )); })()}
                 </tbody>
               </table>
             </div>

@@ -210,19 +210,10 @@ export function ChatBot() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        // TODO [後端串接]: 將 data.reply 改為 data.reply_summary
-        content: data.reply_summary ?? data.reply,
-        // TODO [後端串接]: 後端實作 reply_detail 後此處自動生效
-        detailedContent: data.reply_detail,
+        content: data.brief_reply,
+        detailedContent: data.reply,
         timestamp: new Date(),
         mode: answerType,
-        queryDetails: {
-          sqlJsonl: data.sql_jsonl,
-          introContext: data.intro_context,
-          sqlText: data.sql_text,
-          gpdbParams: data.gpdb_params,
-          gpdbResult: data.gpdb_result,
-        },
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err: any) {

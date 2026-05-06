@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Briefcase, FileText, User, Building2, Loader2 } from 'lucide-react';
-import { getRecord } from '@/services/api';
+import { ArrowLeft, MapPin, FileText, User, Loader2 } from 'lucide-react';
+import { getRecord, getColumns, type ColumnConfig } from '@/services/api';
 import { mapDjangoToRoster } from '@/services/field-mapping';
 import type { RosterRecord } from '@/types/roster';
 import { CardContent, CardHeader, CardTitle, Card } from '@/components/ui/card';
@@ -9,11 +9,42 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
+const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
+  { column_name: '組織',           field_name: '組織',           display_label: '組織',           sort_order_list: 1,  sort_order_detail: 1  },
+  { column_name: '一級單位',        field_name: '一級單位',        display_label: '一級單位',        sort_order_list: 2,  sort_order_detail: 2  },
+  { column_name: '二級單位',        field_name: '二級單位',        display_label: '二級單位',        sort_order_list: 3,  sort_order_detail: 3  },
+  { column_name: '三級單位',        field_name: '三級單位',        display_label: '三級單位',        sort_order_list: 4,  sort_order_detail: 4  },
+  { column_name: '職位',           field_name: '職位',           display_label: '職位',           sort_order_list: 5,  sort_order_detail: 5  },
+  { column_name: '屆次',           field_name: '屆次',           display_label: '屆次',           sort_order_list: 6,  sort_order_detail: 6  },
+  { column_name: '起始日期',        field_name: '起始日期',        display_label: '起始日期',        sort_order_list: 7,  sort_order_detail: 7  },
+  { column_name: '結束日期',        field_name: '結束日期',        display_label: '結束日期',        sort_order_list: 8,  sort_order_detail: 8  },
+  { column_name: '起始日期來源／原因', field_name: '起始日期來源_原因', display_label: '起始日期來源／原因', sort_order_list: 9,  sort_order_detail: 9  },
+  { column_name: '結束日期來源／原因', field_name: '結束日期來源_原因', display_label: '結束日期來源／原因', sort_order_list: 10, sort_order_detail: 10 },
+  { column_name: '產生方式',        field_name: '產生方式',        display_label: '產生方式',        sort_order_list: 11, sort_order_detail: 11 },
+  { column_name: '兼／代',         field_name: '兼_代',          display_label: '兼／代',         sort_order_list: 12, sort_order_detail: 12 },
+  { column_name: '序位',           field_name: '序位',           display_label: '序位',           sort_order_list: 13, sort_order_detail: 13 },
+  { column_name: '離職原因',        field_name: '離職原因',        display_label: '離職原因',        sort_order_list: 14, sort_order_detail: 14 },
+  { column_name: '調／升任單位職稱',  field_name: '調_升任單位職稱',  display_label: '調／升任單位職稱',  sort_order_list: 15, sort_order_detail: 15 },
+  { column_name: '前任姓名',        field_name: '前任姓名',        display_label: '前任姓名',        sort_order_list: 16, sort_order_detail: 16 },
+  { column_name: '後任姓名',        field_name: '後任姓名',        display_label: '後任姓名',        sort_order_list: 17, sort_order_detail: 17 },
+  { column_name: '會議地點',        field_name: '會議地點',        display_label: '會議地點',        sort_order_list: 18, sort_order_detail: 18 },
+  { column_name: '其他備註',        field_name: '其他備註',        display_label: '其他備註',        sort_order_list: 19, sort_order_detail: 19 },
+  { column_name: '其他出處來源',     field_name: '其他出處來源',     display_label: '其他出處來源',     sort_order_list: 20, sort_order_detail: 20 },
+];
+
 export function RosterDetail() {
   const { id } = useParams<{ id: string }>();
+  const [rawRecord, setRawRecord] = useState<Record<string, any> | null>(null);
   const [record, setRecord] = useState<RosterRecord | null>(null);
+  const [detailColumns, setDetailColumns] = useState<ColumnConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getColumns()
+      .then(data => setDetailColumns(data.detail))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -21,6 +52,7 @@ export function RosterDetail() {
     setError(null);
     getRecord(Number(id))
       .then(data => {
+        setRawRecord(data);
         setRecord(mapDjangoToRoster(data));
       })
       .catch(err => {
@@ -108,56 +140,14 @@ export function RosterDetail() {
                 </div>
               </div>
               <CardContent className="space-y-6">
-                {/* Personal Information */}
-                <div>
-                  <h3 className="text-base mb-4">人物資訊</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoRow label="姓名" value={record.name} icon={User} />
-                    <InfoRow label="別名" value={record.alias} />
-                    <InfoRow label="前任姓名" value={record.previousName} />
-                    <InfoRow label="後任姓名" value={record.nextName} />
-                  </div>
-                </div>
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Organization and Position */}
-                <div>
-                  <h3 className="text-base mb-4">組織與職位</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoRow label="一級單位" value={record.unit1} icon={Building2} />
-                    <InfoRow label="二級單位" value={record.unit2} icon={Building2} />
-                    <InfoRow label="三級單位" value={record.unit3} icon={Building2} />
-                    <InfoRow label="職位" value={record.position} icon={Briefcase} />
-                    <InfoRow label="屆次" value={record.term} />
-                    <InfoRow label="序位" value={record.order} />
-                  </div>
-                </div>
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Term Information */}
-                <div>
-                  <h3 className="text-base mb-4">任期時間</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoRow label="起始日期" value={record.startDate} icon={Calendar} />
-                    <InfoRow label="結束日期" value={record.endDate} icon={Calendar} />
-                    <InfoRow label="起始日期來源／原因" value={record.startDateSource} />
-                    <InfoRow label="結束日期來源／原因" value={record.endDateSource} />
-                  </div>
-                </div>
-
-                <Separator className="bg-neutral-200" />
-
-                {/* Appointment Information */}
-                <div>
-                  <h3 className="text-base mb-4">任用與異動</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoRow label="產生方式" value={record.appointmentMethod} />
-                    <InfoRow label="兼／代" value={record.concurrent} />
-                    <InfoRow label="離職原因" value={record.resignationReason} />
-                    <InfoRow label="調／升任單位職稱" value={record.transferPosition} />
-                  </div>
+                {/* 動態欄位：由 KmttblColumnDisplay 控制，讀不到時 fallback 到 DEFAULT_DETAIL_COLUMNS
+                    rawRecord = 後端原始 JSON（中文 key），field_name 與後端 key 一致 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS).map(col => {
+                    const value = rawRecord?.[col.field_name];
+                    if (value === null || value === undefined || value === '') return null;
+                    return <InfoRow key={col.field_name} label={col.display_label} value={String(value)} />;
+                  })}
                 </div>
 
                 <Separator className="bg-neutral-200" />

@@ -59,6 +59,7 @@ const REACT_TO_DJANGO_SEARCH: Record<string, string> = {
   'notes': '其他備註',
   'otherSources': '其他出處來源',
   'all': '全欄位',
+  'organization': '組織',
 };
 
 /**

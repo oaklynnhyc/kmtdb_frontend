@@ -145,18 +145,32 @@ export async function getRecord(id: number | string) {
   return apiFetch<Record<string, any>>(`${BASE}/api/records/${id}/`);
 }
 
+// ========== 欄位顯示設定 API ==========
+
+export interface ColumnConfig {
+  column_name: string;   // DB 物理欄位名（KmttblColumnDisplay.column_name）
+  field_name: string;    // Django ORM 欄位名 = API JSON key（如 '起始日期來源_原因'）
+  display_label: string; // 前端顯示標籤
+  sort_order_list: number;
+  sort_order_detail: number;
+}
+
+export interface ColumnsResponse {
+  list: ColumnConfig[];
+  detail: ColumnConfig[];
+}
+
+export async function getColumns() {
+  return apiFetch<ColumnsResponse>(`${BASE}/api/columns/`);
+}
+
 // ========== 聊天機器人 API ==========
 // 詳見 API_SPEC.md 第 3 節
 
 export interface ChatResponse {
-  reply: string;              // 現有欄位（向下相容）
-  reply_summary: string;      // TODO [後端串接]: 簡要回覆
-  reply_detail: string;       // TODO [後端串接]: 詳細回覆
-  sql_jsonl: string;
-  intro_context: string;
-  sql_text: string;
-  gpdb_result: string;
-  gpdb_params: string;
+  brief_reply: string;   // 簡要回覆
+  reply: string;         // 詳細回覆
+  agent_steps: any[];
 }
 
 export async function chatbotQuery(message: string, answerType: string = 'ans_summary') {
