@@ -25,6 +25,7 @@ const fieldGroups = {
     { value: 'nextName', label: '後任姓名' },
   ],
   組織與職位: [
+    { value: 'organization', label: '組織' },
     { value: 'unit1', label: '一級單位' },
     { value: 'unit2', label: '二級單位' },
     { value: 'unit3', label: '三級單位' },
@@ -217,25 +218,25 @@ export function RosterSearch() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="ink-header text-white py-16 relative">
+      <div className="ink-header text-white py-10 sm:py-14 lg:py-16 relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl mb-3 brush-title">名冊檢索</h1>
-          <p className="text-gray-200 text-lg">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">名冊檢索</h1>
+          <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
             查詢國民黨黨務職名錄與任期資料，支援多條件組合查詢
           </p>
         </div>
         <div className="bottom-ink-wash"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Quick Search */}
-        <div className="paper-card rounded-lg mb-6 seal-corner p-6">
-          <h3 className="text-lg font-medium mb-4 ink-text seal-left">快速查詢</h3>
+        <div className="paper-card rounded-lg mb-6 seal-corner p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 ink-text seal-left">快速查詢</h3>
           <div>
             <Tabs value={quickSearchTab} onValueChange={setQuickSearchTab} className="w-full">
               <div className="ink-tabs">
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
                   {[
                     { key: 'all', label: '全欄位' },
                     { key: 'person', label: '人物姓名' },
@@ -292,9 +293,9 @@ export function RosterSearch() {
             </Tabs>
 
             {/* 搜尋按鈕 */}
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-stretch sm:justify-end">
               <button onClick={handleSearch} disabled={isLoading}
-                className="ink-button px-8 py-2 rounded flex items-center space-x-2 disabled:opacity-50">
+                className="ink-button w-full sm:w-auto px-6 sm:px-8 py-2 rounded flex items-center justify-center space-x-2 disabled:opacity-50">
                 <SearchIcon className="w-4 h-4" />
                 <span>{isLoading ? '搜尋中...' : '搜尋'}</span>
               </button>
@@ -315,18 +316,18 @@ export function RosterSearch() {
             <CardContent>
               <div className="space-y-4">
                 {advancedConditions.map((condition, index) => (
-                  <div key={condition.id} className="flex items-start gap-3 pb-4 border-b border-neutral-200 last:border-0">
+                  <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
                     {index > 0 ? (
                       <Select value={condition.logicOperator}
                         onValueChange={value => updateCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
-                        <SelectTrigger className="w-32 border-neutral-300"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="AND">且 (AND)</SelectItem>
                           <SelectItem value="OR">或 (OR)</SelectItem>
                           <SelectItem value="NOT">非 (NOT)</SelectItem>
                         </SelectContent>
                       </Select>
-                    ) : <div className="w-32" />}
+                    ) : <div className="hidden md:block md:w-32" />}
 
                     <Select value={condition.field}
                       onValueChange={value => {
@@ -337,7 +338,7 @@ export function RosterSearch() {
                           ...(prevIsDate !== nextIsDate ? { value: '' } : {}),
                         });
                       }}>
-                      <SelectTrigger className="w-64 border-neutral-300"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full md:w-64 border-neutral-300"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(fieldGroups).map(([groupName, fields]) => (
                           <div key={groupName}>
@@ -351,7 +352,7 @@ export function RosterSearch() {
                     </Select>
 
                     {condition.field === 'startDate' || condition.field === 'endDate' ? (
-                      <div className="date-input-wrapper flex-1">
+                      <div className="date-input-wrapper w-full md:flex-1">
                         <Input type="date" value={condition.value}
                           onChange={e => updateCondition(condition.id, { value: e.target.value })}
                           onKeyDown={handleKeyDown} className="border-neutral-300" />
@@ -360,11 +361,11 @@ export function RosterSearch() {
                     ) : (
                       <Input placeholder="輸入查詢內容" value={condition.value}
                         onChange={e => updateCondition(condition.id, { value: e.target.value })}
-                        onKeyDown={handleKeyDown} className="flex-1 border-neutral-300" />
+                        onKeyDown={handleKeyDown} className="w-full md:flex-1 border-neutral-300" />
                     )}
 
                     <Button variant="ghost" size="sm" onClick={() => removeCondition(condition.id)}
-                      className="text-neutral-600 hover:text-red-600">
+                      className="self-end md:self-auto text-neutral-600 hover:text-red-600">
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -480,7 +481,7 @@ export function RosterSearch() {
 
         {/* Initial state - no search yet */}
         {!isLoading && !hasSearched && (
-          <div className="paper-card rounded-lg p-12 text-center">
+          <div className="paper-card rounded-lg p-6 sm:p-12 text-center">
             <button
               type="button"
               onClick={handleSearch}
@@ -488,7 +489,7 @@ export function RosterSearch() {
               aria-label="搜尋"
               className="block mx-auto mb-4 text-gray-300 hover:text-[#16a085] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              <SearchIcon className="w-16 h-16" />
+              <SearchIcon className="w-12 h-12 sm:w-16 sm:h-16" />
             </button>
             <p className="text-base ink-text">請輸入查詢條件並點擊搜尋</p>
             <p className="mt-2 text-sm text-gray-500">支援全欄位、姓名、職位、時間範圍等多種搜尋方式</p>
