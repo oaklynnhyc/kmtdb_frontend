@@ -179,3 +179,7 @@ export async function chatbotQuery(message: string, answerType: string = 'ans_su
     body: JSON.stringify({ message, answer_type: answerType }),
   });
 }
+
+export async function chatbotClear() {
+  return apiFetch<{ success: boolean }>(`${BASE}/chatbot/clear/`, { method: 'POST' });
+}

@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { chatbotQuery } from "@/services/api";
+import { chatbotQuery, chatbotClear } from "@/services/api";
 
 type AnswerType = "ans_summary" | "ans_with_gpdb";
 
@@ -13,7 +13,7 @@ interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;            // 簡要回覆
-  detailedContent?: string;   // 詳細回覆（TODO: 接後端 reply_detail 欄位）
+  detailedContent?: string;   // 詳細回覆
   timestamp: Date;
   mode?: AnswerType;          // 此則回覆所使用的回答模式（僅 assistant 訊息）
   type?: "modeSwitch";        // 系統訊息類型（例如模式切換分隔線）
@@ -124,6 +124,7 @@ export function ChatBot() {
       },
     ]);
     setPendingMode(null);
+    chatbotClear().catch(() => {});
   }, [pendingMode]);
 
   const cancelModeSwitch = useCallback(() => setPendingMode(null), []);
