@@ -557,11 +557,14 @@ export function ChatBot() {
               {/* 模式選擇器 pill — 輸入框內靠右 */}
               <div className="relative flex-shrink-0" ref={dropdownRef}>
                 <button
-                  onClick={() => setModelDropdownOpen((v) => !v)}
+                  onClick={() => !isTyping && setModelDropdownOpen((v) => !v)}
+                  disabled={isTyping}
                   className={`flex items-center space-x-1 px-2 py-1 mr-1 rounded-md text-[11px] font-medium transition-colors ${
-                    answerType === "ans_summary"
-                      ? "text-[var(--jade)] bg-[var(--jade)]/8 hover:bg-[var(--jade)]/15"
-                      : "text-[#96852a] bg-[var(--gold)]/10 hover:bg-[var(--gold)]/20"
+                    isTyping
+                      ? "opacity-40 cursor-not-allowed"
+                      : answerType === "ans_summary"
+                        ? "text-[var(--jade)] bg-[var(--jade)]/8 hover:bg-[var(--jade)]/15"
+                        : "text-[#96852a] bg-[var(--gold)]/10 hover:bg-[var(--gold)]/20"
                   }`}
                 >
                   {answerType === "ans_summary" ? (

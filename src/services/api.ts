@@ -90,6 +90,10 @@ export interface SearchParams {
   endMonths?: string[];
   endDays?: string[];
   dateOperators?: string[];
+  // 有值／為空篩選條件
+  isValueFields?: string[];     // Django 欄位名，如 '組織', '一級單位'
+  isValues?: string[];          // '有值' | '為空'
+  isValueOperators?: string[];  // 'and' | 'or' | 'not'
   page?: number;
   pageSize?: number;
   viewType?: 'list' | 'detail';
@@ -128,6 +132,13 @@ export async function searchRecords(params: SearchParams) {
   }
   if (params.dateOperators) {
     params.dateOperators.forEach(o => urlParams.append('date_operator[]', o));
+  }
+
+  // 有值／為空篩選條件
+  if (params.isValueFields) {
+    params.isValueFields.forEach(f => urlParams.append('is_value_field[]', f));
+    params.isValues?.forEach(v => urlParams.append('is_value[]', v));
+    params.isValueOperators?.forEach(o => urlParams.append('is_value_operator[]', o));
   }
 
   // 分頁

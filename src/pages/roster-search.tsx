@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DateInput } from '@/components/ui/date-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { searchRecords, getColumns, type PaginatedResponse, type ColumnConfig } from '@/services/api';
 // mapDjangoToRoster / RosterRecord 不再用於搜尋結果（改為原始資料 + 動態欄位），roster-detail.tsx 仍使用
@@ -15,6 +16,13 @@ interface QueryCondition {
   field: string;
   operator: string;
   value: string;
+  logicOperator: 'AND' | 'OR' | 'NOT';
+}
+
+interface FilterCondition {
+  id: string;
+  field: string;                     // Django 欄位名（中文），直接送後端
+  valueStatus: '有值' | '為空';
   logicOperator: 'AND' | 'OR' | 'NOT';
 }
 
@@ -49,6 +57,40 @@ const fieldGroups = {
     { value: 'meetingLocation', label: '會議地點' },
     { value: 'notes', label: '其他備註' },
     { value: 'otherSources', label: '其他出處來源' },
+  ],
+};
+
+/** 篩選條件（有值／為空）專用欄位：value 為 Django model 欄位名，直接送後端 */
+const filterFieldGroups = {
+  人物資訊: [
+    { value: '姓名', label: '姓名' },
+    { value: '別名', label: '別名' },
+    { value: '前任姓名', label: '前任姓名' },
+    { value: '後任姓名', label: '後任姓名' },
+  ],
+  組織與職位: [
+    { value: '組織', label: '組織' },
+    { value: '一級單位', label: '一級單位' },
+    { value: '二級單位', label: '二級單位' },
+    { value: '三級單位', label: '三級單位' },
+    { value: '職位', label: '職位' },
+    { value: '屆次', label: '屆次' },
+  ],
+  任期時間: [
+    { value: '起始日期來源_原因', label: '起始日期來源／原因' },
+    { value: '結束日期來源_原因', label: '結束日期來源／原因' },
+  ],
+  任用與異動: [
+    { value: '產生方式', label: '產生方式' },
+    { value: '兼_代', label: '兼／代' },
+    { value: '序位', label: '序位' },
+    { value: '離職原因', label: '離職原因' },
+    { value: '調_升任單位職稱', label: '調／升任單位職稱' },
+  ],
+  史料與備註: [
+    { value: '會議地點', label: '會議地點' },
+    { value: '其他備註', label: '其他備註' },
+    { value: '其他出處來源', label: '其他出處來源' },
   ],
 };
 
@@ -88,6 +130,9 @@ export function RosterSearch() {
       { id: 'default-1', field: 'name', operator: 'contains', value: '', logicOperator: 'AND' },
     ]
   );
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>(
+    stored?.filterConditions ?? []
+  );
 
   // 欄位顯示設定
   const [listColumns, setListColumns] = useState<ColumnConfig[]>(stored?.listColumns ?? []);
@@ -111,12 +156,12 @@ export function RosterSearch() {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         quickSearchTab, allFieldsQuery, nameQuery, positionQuery,
         timeStartYear, timeEndYear, showAdvanced, advancedConditions,
-        results, totalCount, currentPage, hasSearched,
+        filterConditions, results, totalCount, currentPage, hasSearched,
       }));
     } catch {}
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear,
-      timeEndYear, showAdvanced, advancedConditions, results, totalCount,
-      currentPage, hasSearched]);
+      timeEndYear, showAdvanced, advancedConditions, filterConditions, results,
+      totalCount, currentPage, hasSearched]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -138,6 +183,26 @@ export function RosterSearch() {
   const updateCondition = (id: string, updates: Partial<QueryCondition>) => {
     setAdvancedConditions(
       advancedConditions.map(c => (c.id === id ? { ...c, ...updates } : c))
+    );
+  };
+
+  const addFilterCondition = () => {
+    setFilterConditions([...filterConditions, {
+      id: `filter-${Date.now()}`,
+      field: '姓名',
+      valueStatus: '有值',
+      logicOperator: 'AND',
+    }]);
+    if (!showAdvanced) setShowAdvanced(true);
+  };
+
+  const removeFilterCondition = (id: string) => {
+    setFilterConditions(filterConditions.filter(c => c.id !== id));
+  };
+
+  const updateFilterCondition = (id: string, updates: Partial<FilterCondition>) => {
+    setFilterConditions(
+      filterConditions.map(c => (c.id === id ? { ...c, ...updates } : c))
     );
   };
 
@@ -201,7 +266,11 @@ export function RosterSearch() {
     const hasTextSearch = queryFields.length > 0;
     const hasDateSearch = allDateSlots.length > 0;
 
-    if (!hasTextSearch && !hasDateSearch) {
+    // 組裝篩選條件（有值／為空）
+    const activeFilterConditions = filterConditions.filter(c => c.field);
+    const hasFilterSearch = activeFilterConditions.length > 0;
+
+    if (!hasTextSearch && !hasDateSearch && !hasFilterSearch) {
       setError('請至少輸入一個搜尋條件');
       return;
     }
@@ -221,6 +290,9 @@ export function RosterSearch() {
         endMonths:     hasDateSearch ? allDateSlots.map(s => s.eM) : undefined,
         endDays:       hasDateSearch ? allDateSlots.map(s => s.eD) : undefined,
         dateOperators: hasDateSearch ? allDateSlots.map(s => s.op) : undefined,
+        isValueFields:    hasFilterSearch ? activeFilterConditions.map(c => c.field) : undefined,
+        isValues:         hasFilterSearch ? activeFilterConditions.map(c => c.valueStatus) : undefined,
+        isValueOperators: hasFilterSearch ? activeFilterConditions.map(c => toDjangoOperator(c.logicOperator)) : undefined,
         page,
         pageSize,
       });
@@ -236,7 +308,7 @@ export function RosterSearch() {
     } finally {
       setIsLoading(false);
     }
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions]);
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
   const handleSearch = () => performSearch(1);
 
@@ -245,7 +317,7 @@ export function RosterSearch() {
   };
 
   const activeFilters = useMemo(() => {
-    const filters = [];
+    const filters: string[] = [];
     if (quickSearchTab === 'all' && allFieldsQuery) filters.push(`全欄位：${allFieldsQuery}`);
     if (quickSearchTab === 'person' && nameQuery) filters.push(`人物姓名：${nameQuery}`);
     if (quickSearchTab === 'position' && positionQuery) filters.push(`職位：${positionQuery}`);
@@ -259,8 +331,13 @@ export function RosterSearch() {
         filters.push(`${prefix}${field?.label}：${c.value}`);
       }
     });
+    filterConditions.forEach((c, index) => {
+      const fieldLabel = Object.values(filterFieldGroups).flat().find(f => f.value === c.field)?.label ?? c.field;
+      const prefix = (filters.length > 0 || index > 0) ? ` ${c.logicOperator} ` : '';
+      filters.push(`${prefix}${fieldLabel}：${c.valueStatus}`);
+    });
     return filters;
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions]);
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
   return (
     <div className="min-h-screen">
@@ -321,19 +398,13 @@ export function RosterSearch() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm ink-text mb-2 font-medium">起始日期</label>
-                    <div className="date-input-wrapper">
-                      <Input type="date" value={timeStartYear}
-                        onChange={e => setTimeStartYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
-                      <Calendar className="date-input-icon w-4 h-4" />
-                    </div>
+                    <DateInput value={timeStartYear}
+                      onChange={setTimeStartYear} onKeyDown={handleKeyDown} className="paper-input" />
                   </div>
                   <div>
                     <label className="block text-sm ink-text mb-2 font-medium">結束日期</label>
-                    <div className="date-input-wrapper">
-                      <Input type="date" value={timeEndYear}
-                        onChange={e => setTimeEndYear(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
-                      <Calendar className="date-input-icon w-4 h-4" />
-                    </div>
+                    <DateInput value={timeEndYear}
+                      onChange={setTimeEndYear} onKeyDown={handleKeyDown} className="paper-input" />
                   </div>
                 </div>
               </TabsContent>
@@ -399,11 +470,10 @@ export function RosterSearch() {
                     </Select>
 
                     {condition.field === 'startDate' || condition.field === 'endDate' ? (
-                      <div className="date-input-wrapper w-full md:flex-1">
-                        <Input type="date" value={condition.value}
-                          onChange={e => updateCondition(condition.id, { value: e.target.value })}
+                      <div className="w-full md:flex-1">
+                        <DateInput value={condition.value}
+                          onChange={v => updateCondition(condition.id, { value: v })}
                           onKeyDown={handleKeyDown} className="border-neutral-300" />
-                        <Calendar className="date-input-icon w-4 h-4" />
                       </div>
                     ) : (
                       <Input placeholder="輸入查詢內容" value={condition.value}
@@ -417,9 +487,66 @@ export function RosterSearch() {
                     </Button>
                   </div>
                 ))}
-                <Button onClick={addCondition} variant="outline" size="sm" className="border-neutral-300 text-neutral-700">
-                  <Plus className="w-4 h-4 mr-2" />新增查詢條件
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={addCondition} variant="outline" size="sm" className="border-neutral-300 text-neutral-700">
+                    <Plus className="w-4 h-4 mr-2" />新增查詢條件
+                  </Button>
+                  <Button onClick={addFilterCondition} variant="outline" size="sm" className="border-neutral-300 text-neutral-700">
+                    <Plus className="w-4 h-4 mr-2" />新增篩選條件
+                  </Button>
+                </div>
+
+                {/* 篩選條件（有值／為空）*/}
+                {filterConditions.length > 0 && (
+                  <>
+                    <div className="cloud-divider !my-3" />
+                    <p className="text-xs text-neutral-500 font-medium tracking-wide">欄位有值／為空篩選</p>
+                    {filterConditions.map((condition, index) => (
+                      <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
+                        {index > 0 ? (
+                          <Select value={condition.logicOperator}
+                            onValueChange={value => updateFilterCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
+                            <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AND">且 (AND)</SelectItem>
+                              <SelectItem value="OR">或 (OR)</SelectItem>
+                              <SelectItem value="NOT">非 (NOT)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : <div className="hidden md:block md:w-32" />}
+
+                        <Select value={condition.field}
+                          onValueChange={value => updateFilterCondition(condition.id, { field: value })}>
+                          <SelectTrigger className="w-full md:w-64 border-neutral-300"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(filterFieldGroups).map(([groupName, fields]) => (
+                              <div key={groupName}>
+                                <div className="px-2 py-1.5 text-xs font-medium text-neutral-500">{groupName}</div>
+                                {fields.map(field => (
+                                  <SelectItem key={field.value} value={field.value}>{field.label}</SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select value={condition.valueStatus}
+                          onValueChange={value => updateFilterCondition(condition.id, { valueStatus: value as '有值' | '為空' })}>
+                          <SelectTrigger className="w-full md:flex-1 border-neutral-300"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="有值">有值</SelectItem>
+                            <SelectItem value="為空">為空</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Button variant="ghost" size="sm" onClick={() => removeFilterCondition(condition.id)}
+                          className="self-end md:self-auto text-neutral-600 hover:text-red-600">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </CardContent>
           )}
