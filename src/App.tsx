@@ -43,7 +43,7 @@ function LayoutWithNav() {
         會覆蓋 sticky，導致導覽列隨頁面捲動。
       */}
       <Navigation />
-      <div className="min-h-screen ink-wash-bg flex flex-col pt-16">
+      <div className="min-h-screen ink-wash-bg flex flex-col pt-14 sm:pt-16">
         <main className="flex-1">
           <Outlet />
         </main>

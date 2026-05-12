@@ -107,27 +107,27 @@ export function RosterDetail() {
 
   return (
     <div className="min-h-screen">
-      <div className="ink-header text-white py-12 relative">
+      <div className="ink-header text-white py-8 sm:py-10 lg:py-12 relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link to="/registry">
-            <button className="mb-4 text-white hover:text-gray-200 px-4 py-2 rounded hover:bg-white/10 transition-colors flex items-center">
+            <button className="mb-3 sm:mb-4 text-white hover:text-gray-200 px-3 sm:px-4 py-2 rounded hover:bg-white/10 transition-colors flex items-center text-sm sm:text-base">
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回名冊檢索
             </button>
           </Link>
-          <h1 className="text-3xl mb-2">職名錄詳細資料</h1>
+          <h1 className="text-2xl sm:text-3xl mb-2">職名錄詳細資料</h1>
         </div>
         <div className="bottom-ink-wash"></div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             <div className="paper-card rounded-lg seal-corner">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center space-x-3 seal-left">
                     <User className="w-5 h-5 text-[#16a085]" />
                     <h2 className="text-xl font-medium ink-text">{record.name}</h2>
@@ -139,10 +139,10 @@ export function RosterDetail() {
                   )}
                 </div>
               </div>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
                 {/* 動態欄位：由 KmttblColumnDisplay 控制，讀不到時 fallback 到 DEFAULT_DETAIL_COLUMNS
                     rawRecord = 後端原始 JSON（中文 key），field_name 與後端 key 一致 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {(detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS).map(col => {
                     const value = rawRecord?.[col.field_name];
                     if (value === null || value === undefined || value === '') return null;

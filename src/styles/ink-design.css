@@ -217,7 +217,13 @@
     transparent 100%
   );
   position: relative;
-  margin: 24px 0;
+  margin: 16px 0;
+}
+
+@media (min-width: 640px) {
+  .cloud-divider {
+    margin: 24px 0;
+  }
 }
 
 .cloud-divider::before {
@@ -596,11 +602,18 @@
   position: absolute;
   top: -50%;
   right: -10%;
-  width: 600px;
-  height: 600px;
+  width: 300px;
+  height: 300px;
   background: radial-gradient(circle, rgba(232, 212, 160, 0.12) 0%, transparent 70%);
   border-radius: 50%;
   animation: floatHero 20s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .hero-section::before {
+    width: 600px;
+    height: 600px;
+  }
 }
 
 @keyframes floatHero {

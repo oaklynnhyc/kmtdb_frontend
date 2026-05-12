@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Markdown } from "@/components/ui/markdown";
 import { chatbotQuery, chatbotClear } from "@/services/api";
 
 type AnswerType = "ans_summary" | "ans_with_gpdb";
@@ -79,7 +80,7 @@ export function ChatBot() {
   const [answerType, setAnswerType] = useState<AnswerType>("ans_summary");
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<AnswerType | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -240,12 +241,19 @@ export function ChatBot() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] overflow-hidden relative">
       {/* ── 左側欄 ── */}
+      {/* 行動裝置：覆蓋式側欄 + 背景遮罩 */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-30 bg-black/40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <aside
-        className={`relative flex-shrink-0 flex flex-col border-r border-[var(--gold)]/20 bg-gradient-to-b from-[#2c3e50] via-[#34495e] to-[#2c3e50] text-white transition-all duration-300 ease-in-out ${
+        className={`flex-shrink-0 flex flex-col border-r border-[var(--gold)]/20 bg-gradient-to-b from-[#2c3e50] via-[#34495e] to-[#2c3e50] text-white transition-all duration-300 ease-in-out overflow-hidden ${
           sidebarOpen ? "w-72" : "w-0"
-        } overflow-hidden`}
+        } ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 top-14 sm:top-16 lg:relative lg:top-0 lg:z-auto" : "relative"}`}
       >
         <div className="flex flex-col h-full w-72">
           {/* Header 區：標題 + 說明 */}
@@ -431,18 +439,20 @@ export function ChatBot() {
                         )} */}
 
                         {/* 簡要回覆（預設顯示） */}
-                        <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        {message.role === "assistant" ? (
+                          <Markdown>{message.content}</Markdown>
+                        ) : (
+                          <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        )}
 
                         {/* 詳細回覆（展開後顯示） */}
                         {message.detailedContent && (
                           <>
                             {expandedReplies.has(message.id) && (
                               <div className="mt-3 pt-3 border-t border-gray-200/60">
-                                <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-                                  {message.detailedContent}
-                                </p>
+                                <Markdown>{message.detailedContent}</Markdown>
                               </div>
                             )}
                             <button
@@ -577,7 +587,7 @@ export function ChatBot() {
                 </button>
 
                 {modelDropdownOpen && (
-                  <div className="absolute bottom-full right-0 mb-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50">
+                  <div className="absolute bottom-full right-0 mb-2 w-64 sm:w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50">
                     <button
                       onClick={() => selectMode("ans_summary")}
                       className={`w-full flex items-start space-x-3 px-4 py-3 text-left transition-colors ${

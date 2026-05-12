@@ -35,13 +35,13 @@ export function LoginPage() {
   return (
     <div className="min-h-screen ink-wash-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="paper-card rounded-lg seal-corner p-8">
+        <div className="paper-card rounded-lg seal-corner p-6 sm:p-8">
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#e8d4a0] to-[#d4af37] mb-4">
               <Database className="w-8 h-8 text-[#2c3e50]" />
             </div>
-            <h1 className="text-2xl font-medium ink-text">
+            <h1 className="text-xl sm:text-2xl font-medium ink-text">
               國民黨職名錄數位加值系統
             </h1>
             <p className="text-sm text-gray-500 mt-2">

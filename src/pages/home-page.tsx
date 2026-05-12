@@ -5,25 +5,25 @@ export function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="ink-header text-white py-20 hero-section relative">
+      <div className="ink-header text-white py-12 sm:py-16 lg:py-20 hero-section relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <h1 className="text-5xl mb-6 font-medium">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-6 font-medium">
               國民黨職名錄
             </h1>
-            <p className="text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-10">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-10">
               本系統典藏歷史性國民黨職名錄資料，提供研究人員與史學工作者存取二十世紀重要政治史料。
               內容涵蓋黨務人事基本資料、任職時間、組織層級及相關檔案文獻，為政治史與社會史研究提供可靠的一手資料來源。
             </p>
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
               <Link to="/registry">
-                <button className="gold-button px-8 py-3 rounded-lg text-lg font-medium">
+                <button className="gold-button w-full sm:w-auto px-8 py-3 rounded-lg text-base sm:text-lg font-medium">
                   開始檢索
                 </button>
               </Link>
               <Link to="/chat">
-                <button className="ink-button px-8 py-3 rounded-lg text-lg font-medium">
+                <button className="ink-button w-full sm:w-auto px-8 py-3 rounded-lg text-base sm:text-lg font-medium">
                   研究助理
                 </button>
               </Link>
@@ -34,9 +34,9 @@ export function HomePage() {
       </div>
 
       {/* About Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="paper-card rounded-lg p-8 seal-corner mb-12">
-          <h2 className="text-3xl mb-6 ink-text section-title">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl mb-4 sm:mb-6 ink-text section-title">
             關於本典藏系統
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
@@ -54,9 +54,9 @@ export function HomePage() {
         </div>
 
         {/* Features */}
-        <div className="cloud-divider mb-12"></div>
+        <div className="cloud-divider mb-6 sm:mb-12"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="paper-card rounded-lg p-6 paper-card-hover ink-border">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#e8d4a0] to-[#d4af37] flex items-center justify-center">
@@ -115,13 +115,13 @@ export function HomePage() {
         </div>
 
         {/* Usage Guide */}
-        <div className="cloud-divider my-12"></div>
+        <div className="cloud-divider my-6 sm:my-12"></div>
 
-        <div className="paper-card rounded-lg p-8 seal-corner">
-          <h3 className="text-2xl mb-6 ink-text section-title">
+        <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner">
+          <h3 className="text-xl sm:text-2xl mb-4 sm:mb-6 ink-text section-title">
             使用指引
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="seal-left">
               <h4 className="text-lg mb-3 ink-text font-medium">
                 學術研究使用
@@ -153,7 +153,7 @@ export function HomePage() {
         </div>
 
         {/* Quick Links */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <Link
             to="/history"
             className="paper-card rounded-lg p-6 paper-card-hover ink-border block"

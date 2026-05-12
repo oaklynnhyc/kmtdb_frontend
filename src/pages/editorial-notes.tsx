@@ -4,11 +4,11 @@ export function EditorialNotes() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="ink-header text-white py-16 relative">
+      <div className="ink-header text-white py-10 sm:py-14 lg:py-16 relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl mb-3 brush-title">凡例</h1>
-          <p className="text-gray-200 text-lg">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">凡例</h1>
+          <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
             職名錄資料編輯體例與使用說明
           </p>
         </div>
@@ -16,14 +16,14 @@ export function EditorialNotes() {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         {/* Part 1: 初版編輯例言 */}
         <div className="paper-card rounded-lg seal-corner">
-          <div className="p-8 space-y-8">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
             <section>
-              <div className="flex items-center space-x-3 mb-6 seal-left">
-                <ScrollText className="w-5 h-5 text-[#16a085]" />
-                <h2 className="text-xl font-medium ink-text">
+              <div className="flex items-center space-x-3 mb-4 sm:mb-6 seal-left">
+                <ScrollText className="w-5 h-5 text-[#16a085] flex-shrink-0" />
+                <h2 className="text-base sm:text-xl font-medium ink-text">
                   中華民國八十三年初版編輯例言
                 </h2>
               </div>
@@ -61,15 +61,15 @@ export function EditorialNotes() {
           </div>
         </div>
 
-        <div className="my-8"></div>
+        <div className="my-4 sm:my-8"></div>
 
         {/* Part 2: 資料庫凡例 */}
         <div className="paper-card rounded-lg seal-corner">
-          <div className="p-8 space-y-8">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
             <section>
-              <div className="flex items-center space-x-3 mb-6 seal-left">
-                <BookOpen className="w-5 h-5 text-[#16a085]" />
-                <h2 className="text-xl font-medium ink-text">
+              <div className="flex items-center space-x-3 mb-4 sm:mb-6 seal-left">
+                <BookOpen className="w-5 h-5 text-[#16a085] flex-shrink-0" />
+                <h2 className="text-base sm:text-xl font-medium ink-text">
                   國立政治大學圖書館中國國民黨職名錄資料庫凡例
                 </h2>
               </div>
@@ -109,9 +109,9 @@ export function EditorialNotes() {
 
             {/* 欄位著錄說明 */}
             <section>
-              <div className="flex items-center space-x-3 mb-6 seal-left">
-                <Info className="w-5 h-5 text-[#16a085]" />
-                <h2 className="text-xl font-medium ink-text">
+              <div className="flex items-center space-x-3 mb-4 sm:mb-6 seal-left">
+                <Info className="w-5 h-5 text-[#16a085] flex-shrink-0" />
+                <h2 className="text-lg sm:text-xl font-medium ink-text">
                   各欄位著錄說明
                 </h2>
               </div>

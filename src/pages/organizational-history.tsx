@@ -288,11 +288,11 @@ export function OrganizationalHistory() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="ink-header text-white py-16 relative">
+      <div className="ink-header text-white py-10 sm:py-14 lg:py-16 relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl mb-3 brush-title">組織沿革</h1>
-          <p className="text-gray-200 text-lg">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">組織沿革</h1>
+          <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
             中國國民黨各時期組織概述
           </p>
         </div>
@@ -300,18 +300,20 @@ export function OrganizationalHistory() {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         {/* Section A: 甲編 */}
         <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6 seal-left">
-            <BookOpen className="w-5 h-5 text-[#d4af37]" />
-            <h2 className="text-xl font-medium ink-text">
-              甲編　改組前各時期
-            </h2>
-            <span className="text-sm text-gray-400 ml-2">1894–1924</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 seal-left">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <BookOpen className="w-5 h-5 text-[#d4af37] flex-shrink-0" />
+              <h2 className="text-lg sm:text-xl font-medium ink-text truncate">
+                甲編　改組前各時期
+              </h2>
+              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">1894–1924</span>
+            </div>
             <button
               onClick={handleExpandAll}
-              className="ml-auto text-sm ink-button text-white px-4 py-1.5 rounded transition-colors"
+              className="sm:ml-auto text-sm ink-button text-white px-4 py-1.5 rounded transition-colors self-start sm:self-auto flex-shrink-0"
             >
               {expandAll ? "全部收合" : "全部展開"}
             </button>
@@ -329,12 +331,14 @@ export function OrganizationalHistory() {
 
         {/* Section B: 乙編 */}
         <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6 seal-left">
-            <Landmark className="w-5 h-5 text-[#16a085]" />
-            <h2 className="text-xl font-medium ink-text">
-              乙編　改組後各屆中央委員會
-            </h2>
-            <span className="text-sm text-gray-400 ml-2">1924–1994</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 seal-left">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <Landmark className="w-5 h-5 text-[#16a085] flex-shrink-0" />
+              <h2 className="text-lg sm:text-xl font-medium ink-text truncate">
+                乙編　改組後各屆中央委員會
+              </h2>
+              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">1924–1994</span>
+            </div>
           </div>
           <div className="space-y-4">
             {sectionB.map((entry) => (
@@ -349,9 +353,9 @@ export function OrganizationalHistory() {
 
         {/* Section: Special orgs */}
         <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6 seal-left">
-            <Users className="w-5 h-5 text-[#8e44ad]" />
-            <h2 className="text-xl font-medium ink-text">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 seal-left">
+            <Users className="w-5 h-5 text-[#8e44ad] flex-shrink-0" />
+            <h2 className="text-lg sm:text-xl font-medium ink-text">
               附：特別組織
             </h2>
           </div>
@@ -367,8 +371,8 @@ export function OrganizationalHistory() {
         </section>
 
         {/* Footer note */}
-        <div className="paper-card rounded-lg p-6 seal-corner">
-          <p className="text-sm text-gray-600 leading-relaxed">
+        <div className="paper-card rounded-lg p-4 sm:p-6 seal-corner">
+          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
             <strong className="ink-text">說明：</strong>
             本頁面資料依據《中國國民黨職名錄》（劉維開編輯，臺北市：中國國民黨黨史會，1994）各時期概述整理。更詳細的黨務人事與職位變動資訊，請參考「名冊檢索」功能。
           </p>
