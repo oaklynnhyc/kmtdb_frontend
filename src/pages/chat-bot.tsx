@@ -87,6 +87,11 @@ export function ChatBot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasUserMessage = messages.some((m) => m.role === "user");
 
+  // Reset backend session memory when component mounts (page load / refresh)
+  useEffect(() => {
+    chatbotClear().catch(() => {});
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
