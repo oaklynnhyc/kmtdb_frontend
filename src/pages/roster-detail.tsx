@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, FileText, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, User, Loader2 } from 'lucide-react';
 import { getRecord, getColumns, type ColumnConfig } from '@/services/api';
 import { mapDjangoToRoster } from '@/services/field-mapping';
 import type { RosterRecord } from '@/types/roster';
@@ -8,6 +8,29 @@ import { CardContent, CardHeader, CardTitle, Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+
+/**
+ * 欄位分類：與 roster-search.tsx 的 fieldGroups / filterFieldGroups 保持一致。
+ * key = Django 欄位的 field_name（與後端 JSON key 一致）。
+ */
+const FIELD_CATEGORY: Record<string, string> = {
+  // 人物資訊
+  '姓名': '人物資訊', '別名': '人物資訊', '前任姓名': '人物資訊', '後任姓名': '人物資訊',
+  // 組織與職位
+  '組織': '組織與職位', '一級單位': '組織與職位', '二級單位': '組織與職位',
+  '三級單位': '組織與職位', '職位': '組織與職位', '屆次': '組織與職位',
+  // 任期時間
+  '起始日期': '任期時間', '結束日期': '任期時間',
+  '起始日期來源_原因': '任期時間', '結束日期來源_原因': '任期時間',
+  // 任用與異動
+  '產生方式': '任用與異動', '兼_代': '任用與異動', '序位': '任用與異動',
+  '離職原因': '任用與異動', '調_升任單位職稱': '任用與異動',
+  // 史料與備註
+  '會議地點': '史料與備註', '其他備註': '史料與備註', '其他出處來源': '史料與備註',
+};
+
+/** 分類顯示順序 */
+const CATEGORY_ORDER = ['人物資訊', '組織與職位', '任期時間', '任用與異動', '史料與備註'];
 
 const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
   { column_name: '組織',           field_name: '組織',           display_label: '組織',           sort_order_list: 1,  sort_order_detail: 1  },
@@ -139,33 +162,39 @@ export function RosterDetail() {
                   )}
                 </div>
               </div>
-              <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-                {/* 動態欄位：由 KmttblColumnDisplay 控制，讀不到時 fallback 到 DEFAULT_DETAIL_COLUMNS
-                    rawRecord = 後端原始 JSON（中文 key），field_name 與後端 key 一致 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {(detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS).map(col => {
+              <CardContent className="space-y-0 p-4 sm:p-6">
+                {/* 動態欄位：依分類群組顯示，分類順序與 search 頁一致 */}
+                {(() => {
+                  const cols = detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS;
+
+                  // 將欄位依分類分組，僅保留有值的欄位
+                  const grouped: Record<string, { col: ColumnConfig; value: string }[]> = {};
+                  for (const col of cols) {
                     const value = rawRecord?.[col.field_name];
-                    if (value === null || value === undefined || value === '') return null;
-                    return <InfoRow key={col.field_name} label={col.display_label} value={String(value)} />;
-                  })}
-                </div>
+                    if (value === null || value === undefined || value === '') continue;
+                    const category = FIELD_CATEGORY[col.field_name] ?? '其他';
+                    if (!grouped[category]) grouped[category] = [];
+                    grouped[category].push({ col, value: String(value) });
+                  }
 
-                <Separator className="bg-neutral-200" />
+                  // 按 CATEGORY_ORDER 排序，未知分類排最後
+                  const orderedCategories = CATEGORY_ORDER.filter(c => grouped[c]);
+                  const extraCategories = Object.keys(grouped).filter(c => !CATEGORY_ORDER.includes(c));
 
-                {/* Historical Records */}
-                <div>
-                  <h3 className="text-base mb-4">史料與備註</h3>
-                  <div className="space-y-3">
-                    <InfoRow label="會議地點" value={record.meetingLocation} icon={MapPin} />
-                    {record.notes && (
-                      <div>
-                        <p className="text-sm text-neutral-500 mb-1">其他備註</p>
-                        <p className="text-neutral-700 leading-relaxed text-sm">{record.notes}</p>
+                  return [...orderedCategories, ...extraCategories].map((category, idx) => (
+                    <div key={category}>
+                      {idx > 0 && <Separator className="bg-neutral-100 my-4 sm:my-5" />}
+                      <p className="text-xs font-medium text-gray-400 tracking-widest uppercase mb-3">
+                        {category}
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        {grouped[category].map(({ col, value }) => (
+                          <InfoRow key={col.field_name} label={col.display_label} value={value} />
+                        ))}
                       </div>
-                    )}
-                    <InfoRow label="其他出處來源" value={record.otherSources} />
-                  </div>
-                </div>
+                    </div>
+                  ));
+                })()}
               </CardContent>
             </div>
           </div>
