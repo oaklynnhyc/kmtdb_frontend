@@ -3,7 +3,6 @@ import {
   Send, Bot, User, ChevronDown, ChevronUp, Database, FileText,
   PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Markdown } from "@/components/ui/markdown";
 import { chatbotQuery, chatbotClear } from "@/services/api";
@@ -565,7 +564,7 @@ export function ChatBot() {
                 placeholder="輸入您的問題..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleSend()}
                 className="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none"
               />
 
