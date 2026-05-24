@@ -313,7 +313,7 @@ export function RosterSearch() {
   const handleSearch = () => performSearch(1);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleSearch();
   };
 
   const activeFilters = useMemo(() => {
