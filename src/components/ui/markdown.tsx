@@ -21,13 +21,13 @@ const components: Components = {
     <p className="text-sm leading-relaxed text-gray-700 mb-2 last:mb-0">{children}</p>
   ),
   ul: ({ children }) => (
-    <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5 mb-2 ml-1">{children}</ul>
+    <ul className="list-disc list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal list-inside text-sm text-gray-700 space-y-0.5 mb-2 ml-1">{children}</ol>
+    <ol className="list-decimal list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ol>
   ),
   li: ({ children }) => (
-    <li className="leading-relaxed">{children}</li>
+    <li className="leading-relaxed pl-0.5">{children}</li>
   ),
   strong: ({ children }) => (
     <strong className="font-semibold text-gray-800">{children}</strong>
