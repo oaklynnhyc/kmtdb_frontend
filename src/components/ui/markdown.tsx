@@ -23,8 +23,8 @@ const components: Components = {
   ul: ({ children }) => (
     <ul className="list-disc list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ul>
   ),
-  ol: ({ children }) => (
-    <ol className="list-decimal list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ol>
+  ol: ({ children, start }) => (
+    <ol start={start} className="list-decimal list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ol>
   ),
   li: ({ children }) => (
     <li className="leading-relaxed pl-0.5">{children}</li>
