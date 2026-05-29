@@ -21,7 +21,7 @@ const components: Components = {
     <p className="text-sm leading-relaxed text-gray-700 mb-2 last:mb-0">{children}</p>
   ),
   ul: ({ children }) => (
-    <ul className="list-disc list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ul>
+    <ul className="list-disc list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5 [&_ul]:list-[circle]">{children}</ul>
   ),
   ol: ({ children, start }) => (
     <ol start={start} className="list-decimal list-outside text-sm text-gray-700 space-y-0.5 mb-2 pl-5">{children}</ol>
