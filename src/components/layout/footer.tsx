@@ -83,7 +83,7 @@ export function Footer() {
                 className="text-sm tracking-wider"
                 style={{ color: 'rgba(232,212,160,0.92)' }}
               >
-                國民黨職名錄數位加值系統
+                中國國民黨職名錄檢索系統
               </p>
               <p
                 className="text-xs"

@@ -347,7 +347,7 @@ export function RosterSearch() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">名冊檢索</h1>
           <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
-            查詢國民黨黨務職名錄與任期資料，支援多條件組合查詢
+            查詢中國國民黨黨務職名錄與任期資料，支援多條件組合查詢
           </p>
         </div>
         <div className="bottom-ink-wash"></div>

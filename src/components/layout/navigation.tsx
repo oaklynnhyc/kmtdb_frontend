@@ -60,7 +60,7 @@ export function Navigation() {
                 <div className="absolute inset-0 bg-[#d4af37] blur-md opacity-0 group-hover:opacity-40 transition-opacity"></div>
               </div>
               <span className="text-sm sm:text-lg font-medium tracking-wide text-[#d4af37] group-hover:text-[#e0bb44] transition-colors truncate">
-                國民黨職名錄數位加值系統
+                中國國民黨職名錄檢索系統
               </span>
             </Link>
           </div>

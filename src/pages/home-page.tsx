@@ -10,10 +10,10 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-6 font-medium">
-              國民黨職名錄
+              中國國民黨職名錄
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-10">
-              本系統典藏歷史性國民黨職名錄資料，提供研究人員與史學工作者存取二十世紀重要政治史料。
+              本系統典藏歷史性中國國民黨職名錄資料，提供研究人員與史學工作者存取二十世紀重要政治史料。
               內容涵蓋黨務人事基本資料、任職時間、組織層級及相關檔案文獻，為政治史與社會史研究提供可靠的一手資料來源。
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
@@ -41,7 +41,7 @@ export function HomePage() {
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              本數位典藏系統保存並開放歷史性國民黨職名錄資料，時間跨度涵蓋二十世紀中後期重要政治發展時期。
+              本數位典藏系統保存並開放歷史性中國國民黨職名錄資料，時間跨度涵蓋二十世紀中後期重要政治發展時期。
               典藏內容包含中央執行委員會、中央監察委員會、各級黨部組織、功能委員會及其所屬單位之重要職務記錄，
               完整記錄人事基本資料、任職時間、組織層級、職位異動等訊息。
             </p>
@@ -162,7 +162,7 @@ export function HomePage() {
               組織沿革
             </h4>
             <p className="text-sm text-gray-600">
-              瞭解國民黨自創建至今的重要歷史事件與組織變革
+              瞭解中國國民黨自創建至今的重要歷史事件與組織變革
             </p>
           </Link>
           <Link
@@ -184,7 +184,7 @@ export function HomePage() {
               開始檢索
             </h4>
             <p className="text-sm text-gray-600">
-              立即開始查詢國民黨職名錄與任期資料
+              立即開始中國國民黨職名錄與任期資料
             </p>
           </Link>
         </div>
