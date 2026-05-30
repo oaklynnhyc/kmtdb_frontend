@@ -13,8 +13,9 @@ export function HomePage() {
               中國國民黨職名錄
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-10">
-              本系統典藏歷史性中國國民黨職名錄資料，提供研究人員與史學工作者存取二十世紀重要政治史料。
-              內容涵蓋黨務人事基本資料、任職時間、組織層級及相關檔案文獻，為政治史與社會史研究提供可靠的一手資料來源。
+              收錄中國國民黨黨務組織自興中會以降，至中國國民黨第十四屆中央委員會重要職名資料，
+              建置人名、組織、職務、任期等結構化欄位，提供多元檢索與交互比對功能，
+              便利研究者快速掌握組織沿革與人事異動脈絡，作為近現代台灣與中國政治史、人物關係與政黨運作研究的重要參考工具。
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
               <Link to="/registry">
@@ -37,18 +38,11 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl mb-4 sm:mb-6 ink-text section-title">
-            關於本典藏系統
+            關於本查詢系統
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              本數位典藏系統保存並開放歷史性中國國民黨職名錄資料，時間跨度涵蓋二十世紀中後期重要政治發展時期。
-              典藏內容包含中央執行委員會、中央監察委員會、各級黨部組織、功能委員會及其所屬單位之重要職務記錄，
-              完整記錄人事基本資料、任職時間、組織層級、職位異動等訊息。
-            </p>
-            <p>
-              本系統為學術研究、圖書館服務、檔案館典藏管理提供重要支援。所有資料經過數位化處理、
-              編目整理與內容標註，確保資料品質與檢索效能。研究人員可透過多元檢索條件，快速定位所需史料，
-              支援政治史、組織史、人事研究等多面向研究工作。
+              本系統收錄自興中會至中國國民黨第十四屆中央委員會重要職名，提供人名、別名、組織單位、職務、任期等檢索欄位，輔助研究者檢視檔案得以參照。本系統以李雲漢主編，劉維開編之《中國國民黨職名錄》（臺北：中國國民黨中央委員會黨史委員會，1994年）為底本，並參照2014年中華書局修訂出版之《中國國民黨職名錄(1894-1994)》進行內容增補。本系統收錄之職名範圍，包括興中會、中國同盟會、國民黨、中華革命黨及中國國民黨(1924年改組前)之職名，以及自1924年第一屆中央執行、監察委員會起，按屆輯錄中央執行委員、中央監察委員、候補中央執行委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員，暨中央黨部各單位正、副主管姓名，并附注相關任免資料。此外，本系統亦導入語言模型技術，開發研究助理功能，不僅提供國民黨組織沿革及人事異動之詢答服務，也結合本校中華民國政府官職資料庫，提供黨政運作及重要職務人事調動之參考。
             </p>
           </div>
         </div>
@@ -63,11 +57,11 @@ export function HomePage() {
                 <Archive className="w-6 h-6 text-[#2c3e50]" />
               </div>
               <h3 className="text-lg font-medium ink-text">
-                完整典藏
+                跨時期收錄
               </h3>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              典藏多筆歷史職名錄資料，涵蓋不同時期、組織層級與職位類型，提供完整研究素材。
+              涵蓋自興中會至中國國民黨第十四屆中央委員會的重要職名，完整呈現黨組織與人事演變脈絡。
             </p>
           </div>
 
@@ -77,11 +71,11 @@ export function HomePage() {
                 <Search className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-medium ink-text">
-                多元檢索
+                結構化檢索
               </h3>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              支援姓名、職位、單位、時間等多種檢索條件，並提供進階Boolean查詢功能。
+              提供人名、別名、組織單位、職務及任期等欄位檢索，並提供排序及篩選功能，提升查找效率。
             </p>
           </div>
 
@@ -91,11 +85,11 @@ export function HomePage() {
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-medium ink-text">
-                詳實記錄
+                人名權威對照
               </h3>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              每筆資料包含完整職務資訊、任期記錄、異動原因及文獻來源，便於深入分析。
+              參照國家圖書館NBINet人名權威查詢系統，建立人名與別名對照，提升人物檢索與資料查找效率。
             </p>
           </div>
 
@@ -105,16 +99,16 @@ export function HomePage() {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-medium ink-text">
-                研究支援
+                智慧研究輔助
               </h3>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              提供智慧型研究助理，協助導覽系統、解答疑問，提升研究效率。
+              研究助理為自然語言詢答功能，可作為理解中國國民黨的組織發展及人事變遷脈絡之參考，並可選擇同步查詢中華民國政府官職資料庫，檢視黨組織與政府組織之間的人事流動。
             </p>
           </div>
         </div>
 
-        {/* Usage Guide */}
+        {/* Usage Guide — 依 0530 修訂暫時隱藏（保留原內容以備還原）
         <div className="cloud-divider my-6 sm:my-12"></div>
 
         <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner">
@@ -151,8 +145,9 @@ export function HomePage() {
             </div>
           </div>
         </div>
+        */}
 
-        {/* Quick Links */}
+        {/* Quick Links — 依 0530 修訂暫時隱藏（保留原內容以備還原）
         <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <Link
             to="/history"
@@ -188,6 +183,7 @@ export function HomePage() {
             </p>
           </Link>
         </div>
+        */}
       </div>
     </div>
   );

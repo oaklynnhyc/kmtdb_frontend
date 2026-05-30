@@ -11,20 +11,20 @@ import { ExternalLink } from 'lucide-react';
 
 const EXTERNAL_LINKS = [
   {
-    label: '政大圖書館',
-    sub: '國立政治大學圖書館',
+    label: '國立政治大學圖書館',
+    sub: 'NCCU Libraries',
     // ↓ TODO【正式部署】確認此網址正確
     href: 'https://www.lib.nccu.edu.tw/',
   },
   {
-    label: '黨史檔案探索系統',
-    sub: '中國國民黨黨史檔案',
+    label: '中國國民黨黨史檔案探索系統',
+    sub: '',
     // ↓ TODO【正式部署】確認此網址正確
     href: 'https://archiveds.lib.nccu.edu.tw/',
   },
   {
-    label: '政府官職資料庫',
-    sub: '中華民國政府官職',
+    label: '中華民國政府官職資料庫',
+    sub: '',
     // ↓ TODO【正式部署】確認此網址正確
     href: 'https://gpost.lib.nccu.edu.tw/',
   },
@@ -89,13 +89,13 @@ export function Footer() {
                 className="text-xs"
                 style={{ color: 'rgba(189,195,199,0.62)' }}
               >
-                © {currentYear}&ensp;國立政治大學圖書館&ensp;·&ensp;典藏與學術研究使用
+                版權聲明：本資料庫之結構化欄位資料，為國立政治大學所擁有，未經授權，不得擅自複製使用
               </p>
               <p
                 className="text-xs"
                 style={{ color: 'rgba(189,195,199,0.4)' }}
               >
-                本系統資料僅供學術研究參考，引用請依學術規範標注來源。
+                Ⓒ{currentYear}&ensp;National Chengchi University All Right Reserved
               </p>
             </div>
 
@@ -115,11 +115,12 @@ export function Footer() {
             </div>
           </div>
 
-          {/* 底部細字分隔 */}
+          {/* 底部細字分隔（保留線條與區塊空間；依 0530 修訂移除下方英文） */}
           <div
             className="mt-3 pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
             style={{ borderTop: '1px solid rgba(189,195,199,0.1)' }}
           >
+            {/* 依 0530 修訂，線條下方英文全數隱藏（保留原內容以備還原）
             <p
               className="text-xs"
               style={{ color: 'rgba(189,195,199,0.32)' }}
@@ -132,6 +133,7 @@ export function Footer() {
             >
               National Chengchi University Library
             </p>
+            */}
           </div>
         </div>
       </div>
@@ -163,12 +165,14 @@ function FooterLink({
         >
           {label}
         </span>
-        <span
-          className="text-xs"
-          style={{ color: 'rgba(189,195,199,0.38)' }}
-        >
-          {sub}
-        </span>
+        {sub && (
+          <span
+            className="text-xs"
+            style={{ color: 'rgba(189,195,199,0.38)' }}
+          >
+            {sub}
+          </span>
+        )}
       </div>
       <ExternalLink
         className="footer-ext-icon w-3 h-3 mt-0.5 flex-shrink-0 transition-colors duration-200"
