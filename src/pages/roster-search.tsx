@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -143,28 +143,78 @@ export function RosterSearch() {
       .catch(() => {});
   }, []);
 
-  // API 狀態
-  const [results, setResults] = useState<Record<string, any>[]>(stored?.results ?? []);
+  // API 狀態（allResults 為一次抓回的全部結果，排序與分頁皆在前端進行）
+  const [allResults, setAllResults] = useState<Record<string, any>[]>(stored?.allResults ?? []);
   const [totalCount, setTotalCount] = useState<number>(stored?.totalCount ?? 0);
   const [currentPage, setCurrentPage] = useState<number>(stored?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState<boolean>(stored?.hasSearched ?? false);
   const [error, setError] = useState('');
 
+  // 排序狀態（前端排序，套用於全部結果）
+  const [sortColumn, setSortColumn] = useState<string | null>(stored?.sortColumn ?? null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(stored?.sortDirection ?? 'asc');
+
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         quickSearchTab, allFieldsQuery, nameQuery, positionQuery,
         timeStartYear, timeEndYear, showAdvanced, advancedConditions,
-        filterConditions, results, totalCount, currentPage, hasSearched,
+        filterConditions, allResults, totalCount, currentPage, hasSearched,
+        sortColumn, sortDirection,
       }));
     } catch {}
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear,
-      timeEndYear, showAdvanced, advancedConditions, filterConditions, results,
-      totalCount, currentPage, hasSearched]);
+      timeEndYear, showAdvanced, advancedConditions, filterConditions, allResults,
+      totalCount, currentPage, hasSearched, sortColumn, sortDirection]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  // 全部結果排序（空值永遠排在最後；兩值皆為數字時做數值比較，否則用繁中 locale 比較）
+  const sortedResults = useMemo(() => {
+    if (!sortColumn) return allResults;
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    const norm = (v: any) => (v == null ? '' : String(v).trim());
+    return [...allResults].sort((ra, rb) => {
+      const av = norm(ra[sortColumn]);
+      const bv = norm(rb[sortColumn]);
+      if (av === '' && bv === '') return 0;
+      if (av === '') return 1;
+      if (bv === '') return -1;
+      const an = Number(av);
+      const bn = Number(bv);
+      if (!Number.isNaN(an) && !Number.isNaN(bn)) return dir * (an - bn);
+      return dir * av.localeCompare(bv, 'zh-Hant');
+    });
+  }, [allResults, sortColumn, sortDirection]);
+
+  // 前端分頁：取排序後當前頁的 50 筆
+  const pagedResults = useMemo(
+    () => sortedResults.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [sortedResults, currentPage]
+  );
+
+  // 點擊欄位標頭切換排序：升冪 → 降冪 → 取消
+  const toggleSort = (key: string) => {
+    if (sortColumn !== key) {
+      setSortColumn(key);
+      setSortDirection('asc');
+    } else if (sortDirection === 'asc') {
+      setSortDirection('desc');
+    } else {
+      setSortColumn(null);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const renderSortIcon = (key: string) => {
+    if (sortColumn !== key) return <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 shrink-0" />;
+    return sortDirection === 'asc'
+      ? <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+      : <ChevronDown className="w-3.5 h-3.5 shrink-0" />;
+  };
 
   const addCondition = () => {
     setAdvancedConditions([...advancedConditions, {
@@ -206,7 +256,7 @@ export function RosterSearch() {
     );
   };
 
-  const performSearch = useCallback(async (page: number = 1) => {
+  const performSearch = useCallback(async () => {
     const queryFields: string[] = [];
     const searchValues: string[] = [];
     const searchOperators: string[] = [];
@@ -293,24 +343,24 @@ export function RosterSearch() {
         isValueFields:    hasFilterSearch ? activeFilterConditions.map(c => c.field) : undefined,
         isValues:         hasFilterSearch ? activeFilterConditions.map(c => c.valueStatus) : undefined,
         isValueOperators: hasFilterSearch ? activeFilterConditions.map(c => toDjangoOperator(c.logicOperator)) : undefined,
-        page,
-        pageSize,
+        page: 1,
+        pageSize: 300,  // 一次抓滿足條件的全部結果（後端上限 300），由前端排序＋分頁
       });
 
-      setResults(data.results as Record<string, any>[]);
+      setAllResults(data.results as Record<string, any>[]);
       setTotalCount(data.count);
-      setCurrentPage(page);
+      setCurrentPage(1);
       setHasSearched(true);
     } catch (err: any) {
       setError(err.message || '搜尋失敗');
-      setResults([]);
+      setAllResults([]);
       setTotalCount(0);
     } finally {
       setIsLoading(false);
     }
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
-  const handleSearch = () => performSearch(1);
+  const handleSearch = () => performSearch();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleSearch();
@@ -597,15 +647,25 @@ export function RosterSearch() {
                   {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return (
                   <tr>
                     <th className="sticky left-0 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">序號</th>
-                    <th className="sticky left-16 px-4 py-3 text-left font-medium border-r border-gray-600/30 bg-[#34495e]">姓名</th>
+                    <th className="sticky left-16 p-0 font-medium border-r border-gray-600/30 bg-[#34495e]">
+                      <button type="button" onClick={() => toggleSort('姓名')}
+                        className="w-full px-4 py-3 flex items-center gap-1 text-left select-none hover:text-[#e8d4a0] transition-colors">
+                        <span>姓名</span>{renderSortIcon('姓名')}
+                      </button>
+                    </th>
                     {cols.map(col => (
-                      <th key={col.field_name} className="px-4 py-3 text-left font-medium whitespace-nowrap">{col.display_label}</th>
+                      <th key={col.field_name} className="p-0 font-medium whitespace-nowrap">
+                        <button type="button" onClick={() => toggleSort(col.field_name)}
+                          className="w-full px-4 py-3 flex items-center gap-1 text-left select-none hover:text-[#e8d4a0] transition-colors">
+                          <span>{col.display_label}</span>{renderSortIcon(col.field_name)}
+                        </button>
+                      </th>
                     ))}
                   </tr>
                   ); })()}
                 </thead>
                 <tbody>
-                  {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return results.map((record, index) => (
+                  {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return pagedResults.map((record, index) => (
                     <tr key={record.id}>
                       <td className="sticky left-0 bg-white px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600">{(currentPage - 1) * pageSize + index + 1}</td>
                       <td className="sticky left-16 bg-white px-4 py-3 border-r border-gray-200 font-medium ink-text">
@@ -622,7 +682,7 @@ export function RosterSearch() {
               </table>
             </div>
 
-            {results.length === 0 && (
+            {allResults.length === 0 && (
               <div className="p-12 text-center text-gray-500">
                 <SearchIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-base ink-text">查無符合條件的資料</p>
@@ -634,14 +694,14 @@ export function RosterSearch() {
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 p-4 border-t border-gray-200">
                 <Button variant="outline" size="sm" disabled={currentPage <= 1}
-                  onClick={() => performSearch(currentPage - 1)} className="border-neutral-300">
+                  onClick={() => setCurrentPage(currentPage - 1)} className="border-neutral-300">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <span className="text-sm ink-text px-4">
                   第 {currentPage} / {totalPages} 頁
                 </span>
                 <Button variant="outline" size="sm" disabled={currentPage >= totalPages}
-                  onClick={() => performSearch(currentPage + 1)} className="border-neutral-300">
+                  onClick={() => setCurrentPage(currentPage + 1)} className="border-neutral-300">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
