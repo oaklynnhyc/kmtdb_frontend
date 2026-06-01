@@ -14,7 +14,7 @@ const NAV_LINKS: NavLink[] = [
   { path: '/', label: '首頁', icon: Home },
   { path: '/history', label: '組織沿革', icon: History },
   { path: '/editorial', label: '凡例', icon: BookOpen },
-  { path: '/registry', label: '名冊檢索', icon: Database, matchPrefix: '/roster/' },
+  { path: '/registry', label: '職名錄檢索', icon: Database, matchPrefix: '/roster/' },
   { path: '/chat', label: '研究助理', icon: Bot },
 ];
 

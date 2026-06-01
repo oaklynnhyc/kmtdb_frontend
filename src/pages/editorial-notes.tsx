@@ -9,7 +9,7 @@ export function EditorialNotes() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">凡例</h1>
           <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
-            職名錄資料編輯體例與使用說明
+            中國國民黨職名錄編輯體例與欄位說明
           </p>
         </div>
         <div className="bottom-ink-wash"></div>
@@ -24,7 +24,7 @@ export function EditorialNotes() {
               <div className="flex items-center space-x-3 mb-4 sm:mb-6 seal-left">
                 <ScrollText className="w-5 h-5 text-[#16a085] flex-shrink-0" />
                 <h2 className="text-base sm:text-xl font-medium ink-text">
-                  中華民國八十三年初版編輯例言
+                  《中國國民黨職名錄》編輯例言
                 </h2>
               </div>
               <ol className="list-none space-y-5 text-gray-700 leading-relaxed pl-4">
@@ -70,37 +70,47 @@ export function EditorialNotes() {
               <div className="flex items-center space-x-3 mb-4 sm:mb-6 seal-left">
                 <BookOpen className="w-5 h-5 text-[#16a085] flex-shrink-0" />
                 <h2 className="text-base sm:text-xl font-medium ink-text">
-                  國立政治大學圖書館中國國民黨職名錄資料庫凡例
+                  國立政治大學圖書館中國國民黨職名錄檢索系統凡例
                 </h2>
               </div>
               <ol className="list-none space-y-5 text-gray-700 leading-relaxed pl-4">
                 <li className="relative pl-8">
                   <span className="absolute left-0 top-0 ink-text font-medium">一、</span>
-                  本資料庫以《中國國民黨職名錄》（劉維開編輯，臺北市：中國國民黨黨史會，1994）為底本，並參照《中国国民党职名录(1894-1994)》（劉維開編輯，北京市：中華書局，2014）進行校對增補。
+                  本系統以1994年劉維開教授編著，中國國民黨黨史會出版之《中國國民黨職名錄》為底本，就各時期中央組織單位之職名進行結構性條目編製與建檔，並參照2014年北京中華書局出版之《中国国民党职名录(1894-1994)》進行校對增補。
                 </li>
                 <li className="relative pl-8">
                   <span className="absolute left-0 top-0 ink-text font-medium">二、</span>
-                  本資料庫收錄原書各時期概述，以利讀者理解組織沿革及演變。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">三、</span>
-                  人名以原書照錄為原則，明顯誤植者修正，其餘照錄。同時本資料庫參照「NBINet人名權威查詢系統」，本名與別名均可查詢。然為避免系統顯示亂碼，異體字改為通用字。例如：羣→群，啓→啟，峯→峰。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">四、</span>
-                  黨團合併姓名不一致者，依「三民主義青年團第二屆中央幹事中央監察暨候補幹事候補監察簡歷冊」(《大溪檔案(黨務類)》，大黨043/014)校正。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">五、</span>
-                  本資料庫針對同名同姓者進行重名查驗，以國史館及本館中國國民黨黨史檔案探索系統為查驗資料來源。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">六、</span>
-                  職位由選舉產生者，例如中央執行委員(含候補)及中央監察委員(含候補)，依原書順序排序，遞補者接續排序。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">七、</span>
-                  原書未註記亡故日期者，以中央社訊/中央日報發布新聞所載日期為查驗資料來源。
+                  本系統考量檢索欄位整合通用性及檢索精確度，調整著錄規則如下：
+                  <ol className="list-none space-y-3 mt-3">
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（一）</span>
+                      日期欄位著錄改用西元紀年。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（二）</span>
+                      人名以原書照錄為原則，明顯誤植者逕行修正，其餘照錄。然為避免系統顯示亂碼，異體字改為通用字。例如：「羣」改用「群」，「啓」改用「啟」，「峯」改用「峰」。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（三）</span>
+                      本系統參照國家圖書館「NBINet人名權威查詢系統」，新增別名欄位，建置人名權威檔，俾使本名與別名均可查檢。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（四）</span>
+                      姓名相同者參照國史館檔案史料文物查詢系統及本館中國國民黨黨史檔案探索系統比對任職時間及身分，予以生卒年標示，以示區隔。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（五）</span>
+                      三民主義青年團於1947年9月黨團合併後，登載姓名不一致者，依大溪檔案收錄「三民主義青年團第二屆中央幹事中央監察暨候補幹事候補監察簡歷冊」（檔號：大黨043/014）登載為準。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（六）</span>
+                      中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員等以選舉方式產生者，依原書順序標示序位。
+                    </li>
+                    <li className="relative pl-10">
+                      <span className="absolute left-0 top-0 ink-text">（七）</span>
+                      在職期間亡故者，若原書未註記亡故日期，以報紙新聞發布所載日期為準，並於「其他出處來源」欄位註記。
+                    </li>
+                  </ol>
                 </li>
               </ol>
             </section>
@@ -155,37 +165,37 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">職位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職務名稱。依原書著錄。
+                        職銜
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">姓名</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄，例外著錄原則如上述。
+                        以原書照錄為原則，異體字及明顯誤植者逕行修正。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">別名</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依「NBINet人名權威查詢系統」增補。
+                        依國家圖書館「NBINet人名權威查詢系統」增補。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">屆次</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書屆次著錄。中改會列於第六屆中央執行、監察委員會，三青團依原書另列。
+                        依原書著錄。中央改造委員會、三民主義青年團獨立列出。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">起始日期</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職位起始日期。原書有明確日期者，依原書著錄。選舉產生者，以選出日期為起始日期。原書如未著錄日期者，欄位留白。
+                        依原書著錄。選舉產生者，以選出日期為起始日期。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">起始日期來源／原因</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職位任用通過之會議或主席指派等任命方式。
+                        依原書著錄。
                       </td>
                     </tr>
                     <tr>
@@ -197,13 +207,13 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">結束日期</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職位結束日期。原書有明確日期者，依原書著錄。選舉產生者，如中央執行委員(含候補)、中央監察委員(候補)、中央評議委員等，以下屆全國代表大會開會前一天為結束日期。中央常務委員以下屆中央委員會全體會議開會前一天為結束日期，如無下屆者，以下屆全國代表大會開會前一天為結束日期。如有明確離職原因如另有任用或亡故者，以該日期為結束日期。原書如未著錄日期者，欄位留白。
+                        有明確離職原因者，以該日期為結束日期。中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員等由全國代表大會選舉產生者，以下屆全國代表大會開會前一天為結束日期。中央常務委員以下次中央委員會全體會議開會前一天為結束日期，如無下次者，以下屆全國代表大會開會前一天為結束日期。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">結束日期來源／原因</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職位結束之會議或主席指派等任命方式。
+                        依原書著錄。
                       </td>
                     </tr>
                     <tr>
@@ -233,31 +243,31 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">調／升任單位職稱</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        結束任期後調/升任之單位，依原書著錄。
+                        依原書著錄。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">其他備註</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        其他需說明之事項。
+                        其他補充說明。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">會議地點</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        會議召開之城市。
+                        會議舉行城市。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">其他出處來源</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職名錄原書以外之參考資料。
+                        其他引用文獻。
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">序位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職位由選舉產生者，依原書順序給予號碼，遞補者號碼接續。
+                        由選舉產生者，依原書順序標示序位，遞補者接續標示。
                       </td>
                     </tr>
                   </tbody>

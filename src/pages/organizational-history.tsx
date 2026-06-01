@@ -229,8 +229,8 @@ const sectionB: IntroEntry[] = [
   },
   {
     title: "第十四屆中央委員會",
-    era: "1993–",
-    years: "民國八十二年–",
+    era: "1993–1997",
+    years: "民國八十二年–民國八十六年",
     category: "committee",
     content: [
       "民國八十二年八月十六日，第十四次全國代表大會在臺北開幕。大會通過「中國國民黨黨章」修正案，明定黨主席由全國代表大會代表以無記名單記法選舉之，並增設副主席若干人。李登輝先生當選連任主席。",
@@ -374,7 +374,7 @@ export function OrganizationalHistory() {
         <div className="paper-card rounded-lg p-4 sm:p-6 seal-corner">
           <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
             <strong className="ink-text">說明：</strong>
-            本頁面資料依據《中國國民黨職名錄》（劉維開編輯，臺北市：中國國民黨黨史會，1994）各時期概述整理。更詳細的黨務人事與職位變動資訊，請參考「名冊檢索」功能。
+            本頁面資料依據《中國國民黨職名錄》（劉維開編輯，臺北市：中國國民黨黨史會，1994）各時期概述整理。更詳細的黨務人事與職位變動資訊，請參考「職名錄檢索」功能。
           </p>
         </div>
       </div>

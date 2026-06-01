@@ -10,7 +10,7 @@ export function RecordDetail() {
           <Link to="/registry">
             <button className="mb-4 text-white hover:text-gray-200 px-4 py-2 rounded hover:bg-white/10 transition-colors flex items-center">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回名冊檢索
+              返回職名錄檢索
             </button>
           </Link>
           <h1 className="text-3xl mb-2">黨員資料</h1>
@@ -31,7 +31,7 @@ export function RecordDetail() {
             </p>
             <Link to="/registry">
               <button className="ink-button px-6 py-2 rounded">
-                前往名冊檢索
+                前往職名錄檢索
               </button>
             </Link>
           </div>

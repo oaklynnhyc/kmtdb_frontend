@@ -10,7 +10,7 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-6 font-medium">
-              中國國民黨職名錄
+              中國國民黨職名錄檢索系統
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-10">
               收錄中國國民黨黨務組織自興中會以降，至中國國民黨第十四屆中央委員會重要職名資料，
@@ -38,13 +38,13 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl mb-4 sm:mb-6 ink-text section-title">
-            關於本查詢系統
+            關於本檢索系統
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
               本系統收錄自興中會至中國國民黨第十四屆中央委員會重要職名，提供人名、別名、組織單位、職務、任期等檢索欄位，輔助研究者檢視檔案得以參照。本系統以李雲漢主編，劉維開編之《中國國民黨職名錄》（臺北：中國國民黨中央委員會黨史委員會，1994年）為底本，並參照2014年中華書局修訂出版之《中國國民黨職名錄(1894-1994)》進行內容增補。
               <br /><br />
-              本系統收錄之職名範圍，包括興中會、中國同盟會、國民黨、中華革命黨及中國國民黨(1924年改組前)之職名，以及自1924年第一屆中央執行、監察委員會起，按屆輯錄中央執行委員、中央監察委員、候補中央執行委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員，暨中央黨部各單位正、副主管姓名，并附注相關任免資料。此外，本系統亦導入語言模型技術，開發研究助理功能，不僅提供國民黨組織沿革及人事異動之詢答服務，也結合本校中華民國政府官職資料庫，提供黨政運作及重要職務人事調動之參考。
+              本系統收錄之職名範圍，包括興中會、中國同盟會、國民黨、中華革命黨及中國國民黨(1924年改組前)之職名，以及自1924年第一屆中央執行、監察委員會起，按屆輯錄中央執行委員、中央監察委員、候補中央執行委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員，暨中央黨部各單位正、副主管姓名，並附注相關任免資料。此外，本系統亦導入語言模型技術，開發研究助理功能，不僅提供國民黨組織沿革及人事異動之詢答服務，也結合本校中華民國政府官職資料庫，提供黨政運作及重要職務人事調動之參考。
             </p>
           </div>
         </div>

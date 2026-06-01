@@ -89,7 +89,7 @@ export function Footer() {
                 className="text-xs"
                 style={{ color: 'rgba(189,195,199,0.62)' }}
               >
-                版權聲明：本資料庫之結構化欄位資料，為國立政治大學所擁有，未經授權，不得擅自複製使用
+                版權聲明：本檢索系統之結構化欄位資料，為國立政治大學所擁有，未經授權，不得擅自複製使用
               </p>
               <p
                 className="text-xs"

@@ -53,7 +53,7 @@ const fieldGroups = {
     { value: 'resignationReason', label: '離職原因' },
     { value: 'transferPosition', label: '調／升任單位職稱' },
   ],
-  史料與備註: [
+  其他: [
     { value: 'meetingLocation', label: '會議地點' },
     { value: 'notes', label: '其他備註' },
     { value: 'otherSources', label: '其他出處來源' },
@@ -87,7 +87,7 @@ const filterFieldGroups = {
     { value: '離職原因', label: '離職原因' },
     { value: '調_升任單位職稱', label: '調／升任單位職稱' },
   ],
-  史料與備註: [
+  其他: [
     { value: '會議地點', label: '會議地點' },
     { value: '其他備註', label: '其他備註' },
     { value: '其他出處來源', label: '其他出處來源' },
@@ -395,9 +395,9 @@ export function RosterSearch() {
       <div className="ink-header text-white py-10 sm:py-14 lg:py-16 relative">
         <div className="top-ink-wash"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">名冊檢索</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 brush-title">職名錄檢索</h1>
           <p className="text-gray-200 text-sm sm:text-base lg:text-lg">
-            查詢中國國民黨黨務職名錄與任期資料，支援多條件組合查詢
+            查詢自興中會至中國國民黨第十四屆中央委員會重要職名
           </p>
         </div>
         <div className="bottom-ink-wash"></div>
@@ -550,7 +550,7 @@ export function RosterSearch() {
                 {filterConditions.length > 0 && (
                   <>
                     <div className="cloud-divider !my-3" />
-                    <p className="text-xs text-neutral-500 font-medium tracking-wide">欄位有值／為空篩選</p>
+                    <p className="text-xs text-neutral-500 font-medium tracking-wide">欄位資料篩選</p>
                     {filterConditions.map((condition, index) => (
                       <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
                         {index > 0 ? (
@@ -584,8 +584,8 @@ export function RosterSearch() {
                           onValueChange={value => updateFilterCondition(condition.id, { valueStatus: value as '有值' | '為空' })}>
                           <SelectTrigger className="w-full md:flex-1 border-neutral-300"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="有值">有值</SelectItem>
-                            <SelectItem value="為空">為空</SelectItem>
+                            <SelectItem value="有值">有資料</SelectItem>
+                            <SelectItem value="為空">無資料</SelectItem>
                           </SelectContent>
                         </Select>
 

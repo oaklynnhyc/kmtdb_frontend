@@ -25,12 +25,12 @@ const FIELD_CATEGORY: Record<string, string> = {
   // 任用與異動
   '產生方式': '任用與異動', '兼_代': '任用與異動', //'序位': '任用與異動',
   '離職原因': '任用與異動', '調_升任單位職稱': '任用與異動',
-  // 史料與備註
-  '會議地點': '史料與備註', '其他備註': '史料與備註', '其他出處來源': '史料與備註',
+  // 其他
+  '會議地點': '其他', '其他備註': '其他', '其他出處來源': '其他',
 };
 
 /** 分類顯示順序 */
-const CATEGORY_ORDER = ['人物資訊', '組織與職位', '任期時間', '任用與異動', '史料與備註'];
+const CATEGORY_ORDER = ['人物資訊', '組織與職位', '任期時間', '任用與異動', '其他'];
 
 const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
   { column_name: '組織',           field_name: '組織',           display_label: '組織',           sort_order_list: 1,  sort_order_detail: 1  },
@@ -107,7 +107,7 @@ export function RosterDetail() {
               {error || '您查詢的職名錄資料不存在'}
             </p>
             <Link to="/registry">
-              <button className="ink-button px-6 py-2 rounded">返回名冊檢索</button>
+              <button className="ink-button px-6 py-2 rounded">返回職名錄檢索</button>
             </Link>
           </div>
         </div>
@@ -136,10 +136,10 @@ export function RosterDetail() {
           <Link to="/registry">
             <button className="mb-3 sm:mb-4 text-white hover:text-gray-200 px-3 sm:px-4 py-2 rounded hover:bg-white/10 transition-colors flex items-center text-sm sm:text-base">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回名冊檢索
+              返回職名錄檢索
             </button>
           </Link>
-          <h1 className="text-2xl sm:text-3xl mb-2">職名錄詳細資料</h1>
+          <h1 className="text-2xl sm:text-3xl mb-2">詳細資料</h1>
         </div>
         <div className="bottom-ink-wash"></div>
       </div>
@@ -238,14 +238,17 @@ export function RosterDetail() {
               </CardHeader>
               <CardContent>
                 <div className="p-3 bg-neutral-100 rounded text-xs font-mono break-words leading-relaxed">
-                  國民黨職名錄數位加值系統，〈{record.name}〉，{record.position || '職位不詳'}，{record.startDate || '起始不詳'}至{record.endDate || '結束不詳'}，檢索日期：{new Date().toLocaleDateString('zh-TW')}。
+                  〈{record.name}〉，收入「中國國民黨職名錄檢索系統」：{window.location.href}（{new Date().toLocaleDateString('zh-TW')}點閱）。
                 </div>
+                {/* 依 0601 修訂，引用格式下方淺灰說明文字隱藏（保留原內容以備還原）
                 <p className="text-xs text-neutral-500 mt-3 leading-relaxed">
                   進行學術引用時，請使用上述格式並依學術規範調整。詳細引用說明請參考凡例頁面。
                 </p>
+                */}
               </CardContent>
             </Card>
 
+            {/* 依 0601 修訂，「相關功能」區塊隱藏（保留原內容以備還原）
             <Card className="border-neutral-200">
               <CardHeader>
                 <CardTitle className="text-base">相關功能</CardTitle>
@@ -270,6 +273,7 @@ export function RosterDetail() {
                 </div>
               </CardContent>
             </Card>
+            */}
           </div>
         </div>
       </div>
