@@ -350,6 +350,8 @@ export function RosterSearch() {
       setAllResults(data.results as Record<string, any>[]);
       setTotalCount(data.count);
       setCurrentPage(1);
+      setSortColumn(null);
+      setSortDirection('asc');
       setHasSearched(true);
     } catch (err: any) {
       setError(err.message || '搜尋失敗');
