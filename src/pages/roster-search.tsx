@@ -54,7 +54,7 @@ const fieldGroups = {
     { value: 'transferPosition', label: '調／升任單位職稱' },
   ],
   其他: [
-    { value: 'meetingLocation', label: '會議地點' },
+    { value: 'meetingLocation', label: '地點' },
     { value: 'notes', label: '其他備註' },
     { value: 'otherSources', label: '其他出處來源' },
   ],
@@ -88,7 +88,7 @@ const filterFieldGroups = {
     { value: '調_升任單位職稱', label: '調／升任單位職稱' },
   ],
   其他: [
-    { value: '會議地點', label: '會議地點' },
+    { value: '會議地點', label: '地點' },
     { value: '其他備註', label: '其他備註' },
     { value: '其他出處來源', label: '其他出處來源' },
   ],

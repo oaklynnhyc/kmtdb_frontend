@@ -253,9 +253,9 @@ export function EditorialNotes() {
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">會議地點</td>
+                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">地點</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        會議舉行城市。
+                        組織／單位所在城市，依原書著錄。
                       </td>
                     </tr>
                     <tr>
