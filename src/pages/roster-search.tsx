@@ -405,7 +405,8 @@ export function RosterSearch() {
     filterConditions.forEach((c, index) => {
       const fieldLabel = Object.values(filterFieldGroups).flat().find(f => f.value === c.field)?.label ?? c.field;
       const prefix = (filters.length > 0 || index > 0) ? ` ${c.logicOperator} ` : '';
-      filters.push(`${prefix}${fieldLabel}：${c.valueStatus}`);
+      const statusLabel = c.valueStatus === '有值' ? '有資料' : '無資料';
+      filters.push(`${prefix}${fieldLabel}：${statusLabel}`);
     });
     return filters;
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
