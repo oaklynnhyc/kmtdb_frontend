@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronsUpDown, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -115,6 +115,7 @@ function loadStoredState(): any {
 }
 
 export function RosterSearch() {
+  const navigate = useNavigate();
   const stored = loadStoredState();
 
   const [quickSearchTab, setQuickSearchTab] = useState<string>(stored?.quickSearchTab ?? 'all');
@@ -686,12 +687,11 @@ export function RosterSearch() {
                 </thead>
                 <tbody>
                   {(() => { const cols = listColumns.length > 0 ? listColumns : DEFAULT_LIST_COLUMNS; return pagedResults.map((record, index) => (
-                    <tr key={record.id}>
-                      <td className="sticky left-0 bg-white px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600">{(currentPage - 1) * pageSize + index + 1}</td>
-                      <td className="sticky left-16 bg-white px-4 py-3 border-r border-gray-200 font-medium ink-text">
-                        <Link to={`/roster/${record.id}`} className="hover:text-[#16a085] hover:underline transition-colors">
-                          {record['姓名']}
-                        </Link>
+                    <tr key={record.id} onClick={() => navigate(`/roster/${record.id}`)}
+                      className="group cursor-pointer">
+                      <td className="sticky left-0 bg-white group-hover:bg-[#faf6ec] px-4 py-3 border-r border-gray-200 font-mono text-xs text-gray-600 transition-colors">{(currentPage - 1) * pageSize + index + 1}</td>
+                      <td className="sticky left-16 bg-white group-hover:bg-[#faf6ec] px-4 py-3 border-r border-gray-200 font-medium ink-text group-hover:text-[#16a085] transition-colors">
+                        {record['姓名']}
                       </td>
                       {cols.map(col => (
                         <td key={col.field_name} className="px-4 py-3 text-gray-700">{record[col.field_name] || '—'}</td>
