@@ -329,7 +329,8 @@ export function RosterSearch() {
     setError('');
 
     try {
-      const data = await searchRecords({
+      // 共用查詢條件（不含分頁參數）
+      const searchPayload = {
         queryFields: hasTextSearch ? queryFields : ['全欄位'],
         searchValues: hasTextSearch ? searchValues : [''],
         searchOperators: hasTextSearch ? searchOperators : ['and'],
@@ -343,12 +344,29 @@ export function RosterSearch() {
         isValueFields:    hasFilterSearch ? activeFilterConditions.map(c => c.field) : undefined,
         isValues:         hasFilterSearch ? activeFilterConditions.map(c => c.valueStatus) : undefined,
         isValueOperators: hasFilterSearch ? activeFilterConditions.map(c => toDjangoOperator(c.logicOperator)) : undefined,
-        page: 1,
-        pageSize: 300,  // 一次抓滿足條件的全部結果（後端上限 300），由前端排序＋分頁
-      });
+      };
 
-      setAllResults(data.results as Record<string, any>[]);
-      setTotalCount(data.count);
+      // 後端每頁上限為 300，故分頁抓取：先抓第 1 頁取得總筆數，
+      // 其餘頁面並行抓取後合併，前端再自行排序＋分頁（不再受 300 筆限制）。
+      const BACKEND_MAX_PAGE_SIZE = 300;
+      const first = await searchRecords({ ...searchPayload, page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
+      const total = first.count;
+      let merged = first.results as Record<string, any>[];
+
+      const totalPages = Math.ceil(total / BACKEND_MAX_PAGE_SIZE);
+      if (totalPages > 1) {
+        const restPages = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            searchRecords({ ...searchPayload, page: i + 2, pageSize: BACKEND_MAX_PAGE_SIZE })
+          )
+        );
+        for (const pageData of restPages) {
+          merged = merged.concat(pageData.results as Record<string, any>[]);
+        }
+      }
+
+      setAllResults(merged);
+      setTotalCount(total);
       setCurrentPage(1);
       setSortColumn(null);
       setSortDirection('asc');
