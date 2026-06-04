@@ -88,7 +88,7 @@ const filterFieldGroups = {
     { value: '調_升任單位職稱', label: '調／升任單位職稱' },
   ],
   其他: [
-    { value: '會議地點', label: '地點' },
+    { value: '地點', label: '地點' },
     { value: '其他備註', label: '其他備註' },
     { value: '其他出處來源', label: '其他出處來源' },
   ],

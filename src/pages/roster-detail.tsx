@@ -50,7 +50,7 @@ const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
   { column_name: '調／升任單位職稱',  field_name: '調_升任單位職稱',  display_label: '調／升任單位職稱',  sort_order_list: 15, sort_order_detail: 15 },
   { column_name: '前任姓名',        field_name: '前任姓名',        display_label: '前任姓名',        sort_order_list: 16, sort_order_detail: 16 },
   { column_name: '後任姓名',        field_name: '後任姓名',        display_label: '後任姓名',        sort_order_list: 17, sort_order_detail: 17 },
-  { column_name: '會議地點',        field_name: '會議地點',        display_label: '地點',        sort_order_list: 18, sort_order_detail: 18 },
+  { column_name: '地點',           field_name: '地點',           display_label: '地點',           sort_order_list: 18, sort_order_detail: 18 },
   { column_name: '其他備註',        field_name: '其他備註',        display_label: '其他備註',        sort_order_list: 19, sort_order_detail: 19 },
   { column_name: '其他出處來源',     field_name: '其他出處來源',     display_label: '其他出處來源',     sort_order_list: 20, sort_order_detail: 20 },
 ];

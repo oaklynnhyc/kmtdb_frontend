@@ -156,7 +156,7 @@ GET /api/search/
 | `序位` | 序位 |
 | `離職原因` | 離職原因 |
 | `調_升任單位職稱` | 調/升任單位職稱 |
-| `會議地點` | 會議地點 |
+| `地點` | 地點 |
 | `其他備註` | 其他備註 |
 | `其他出處來源` | 其他出處來源 |
 
@@ -188,7 +188,7 @@ GET /api/search/
       "序位": 1,
       "離職原因": "逝世",
       "調_升任單位職稱": "",
-      "會議地點": "廣州",
+      "地點": "廣州",
       "其他備註": "",
       "其他出處來源": ""
     }
@@ -375,6 +375,6 @@ urlpatterns = [
 | `序位` | `order` | number? |
 | `離職原因` | `resignationReason` | string? |
 | `調_升任單位職稱` | `transferPosition` | string? |
-| `會議地點` | `meetingLocation` | string? |
+| `地點` | `meetingLocation` | string? |
 | `其他備註` | `notes` | string? |
 | `其他出處來源` | `otherSources` | string? |
