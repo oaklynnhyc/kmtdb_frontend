@@ -156,6 +156,20 @@ export async function getRecord(id: number | string) {
   return apiFetch<Record<string, any>>(`${BASE}/api/records/${id}/`);
 }
 
+// ========== 組織沿革 API ==========
+
+export interface Introduction {
+  id: number;
+  title: string;  // 屆次
+  content: string;
+}
+
+export async function getIntroductions(): Promise<Introduction[]> {
+  const response = await fetch(`${BASE}/api/introductions/`, { credentials: 'include' });
+  if (!response.ok) throw new Error(`API Error ${response.status}`);
+  return response.json();
+}
+
 // ========== 欄位顯示設定 API ==========
 
 export interface ColumnConfig {

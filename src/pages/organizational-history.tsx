@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, BookOpen, Landmark, Users } from "lucide-react";
+import { getIntroductions } from "@/services/api";
 
 interface IntroEntry {
   title: string;
@@ -375,6 +376,20 @@ const categoryConfig = {
 
 export function OrganizationalHistory() {
   const [expandAll, setExpandAll] = useState(false);
+  const [contentOverrides, setContentOverrides] = useState<Map<string, string[]>>(new Map());
+
+  useEffect(() => {
+    getIntroductions()
+      .then((data) => {
+        const overrides = new Map<string, string[]>();
+        data.forEach(({ title, content }) => {
+          const paragraphs = content.split(/\r?\n\r?\n/).filter(Boolean);
+          overrides.set(title, paragraphs);
+        });
+        setContentOverrides(overrides);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleExpandAll = () => {
     setExpandAll(!expandAll);
@@ -419,6 +434,7 @@ export function OrganizationalHistory() {
                 key={entry.title}
                 entry={entry}
                 forceExpand={expandAll}
+                contentOverride={contentOverrides.get(entry.title)}
               />
             ))}
           </div>
@@ -441,6 +457,7 @@ export function OrganizationalHistory() {
                 key={entry.title}
                 entry={entry}
                 forceExpand={expandAll}
+                contentOverride={contentOverrides.get(entry.title)}
               />
             ))}
           </div>
@@ -460,6 +477,7 @@ export function OrganizationalHistory() {
                 key={entry.title}
                 entry={entry}
                 forceExpand={expandAll}
+                contentOverride={contentOverrides.get(entry.title)}
               />
             ))}
           </div>
@@ -480,14 +498,17 @@ export function OrganizationalHistory() {
 function ExpandableEntry({
   entry,
   forceExpand,
+  contentOverride,
 }: {
   entry: IntroEntry;
   forceExpand: boolean;
+  contentOverride?: string[];
 }) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const expanded = forceExpand || localExpanded;
   const config = categoryConfig[entry.category];
-  const preview = entry.content[0];
+  const content = contentOverride ?? entry.content;
+  const preview = content[0];
 
   return (
     <div className="paper-card rounded-lg paper-card-hover ink-border overflow-hidden">
@@ -527,7 +548,7 @@ function ExpandableEntry({
       {expanded && (
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-gray-100">
           <div className="pt-4 space-y-4 text-gray-700 leading-relaxed text-[15px]">
-            {entry.content.map((para, i) => (
+            {content.map((para, i) => (
               <p key={i}>{para}</p>
             ))}
           </div>
