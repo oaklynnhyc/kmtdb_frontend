@@ -25,7 +25,7 @@ export function HomePage() {
               </Link>
               <Link to="/chat">
                 <button className="ink-button w-full sm:w-auto px-8 py-3 rounded-lg text-base sm:text-lg font-medium">
-                  研究助理
+                  AI助理
                 </button>
               </Link>
             </div>
@@ -105,7 +105,7 @@ export function HomePage() {
               </h3>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              研究助理為自然語言詢答功能，可作為理解中國國民黨的組織發展及人事變遷脈絡之參考，並可選擇同步查詢中華民國政府官職資料庫，檢視黨組織與政府組織之間的人事流動。
+              AI助理為自然語言詢答功能，可作為理解中國國民黨的組織發展及人事變遷脈絡之參考，並可選擇同步查詢中華民國政府官職資料庫，檢視黨組織與政府組織之間的人事流動。
             </p>
           </div>
         </div>
