@@ -147,7 +147,7 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">一級單位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        甲編本部一級單位。乙編第一至六屆中央執行、監察委員會，第七至十四屆中央委員會，三民主義青年團與中央改造委員會亦列入一級單位。
+                        甲編本部一級單位。乙編第一至六屆中央執行、監察委員會，第七至十四屆中央委員會、中央評議委員會，三民主義青年團與中央改造委員會亦列入一級單位。
                       </td>
                     </tr>
                     <tr>
