@@ -122,6 +122,7 @@ export function RosterSearch() {
   const [allFieldsQuery, setAllFieldsQuery] = useState<string>(stored?.allFieldsQuery ?? '');
   const [nameQuery, setNameQuery] = useState<string>(stored?.nameQuery ?? '');
   const [positionQuery, setPositionQuery] = useState<string>(stored?.positionQuery ?? '');
+  const [termQuery, setTermQuery] = useState<string>(stored?.termQuery ?? '');
   const [timeStartYear, setTimeStartYear] = useState<string>(stored?.timeStartYear ?? '');
   const [timeEndYear, setTimeEndYear] = useState<string>(stored?.timeEndYear ?? '');
 
@@ -159,13 +160,13 @@ export function RosterSearch() {
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        quickSearchTab, allFieldsQuery, nameQuery, positionQuery,
+        quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery,
         timeStartYear, timeEndYear, showAdvanced, advancedConditions,
         filterConditions, allResults, totalCount, currentPage, hasSearched,
         sortColumn, sortDirection,
       }));
     } catch {}
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear,
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear,
       timeEndYear, showAdvanced, advancedConditions, filterConditions, allResults,
       totalCount, currentPage, hasSearched, sortColumn, sortDirection]);
 
@@ -285,6 +286,8 @@ export function RosterSearch() {
       pushExpanded('姓名_別名', nameQuery, 'and');
     } else if (quickSearchTab === 'position' && positionQuery.trim()) {
       pushExpanded('職位', positionQuery, 'and');
+    } else if (quickSearchTab === 'term' && termQuery.trim()) {
+      pushExpanded('屆次', termQuery, 'and');
     }
 
     // 進階搜尋：startDate/endDate 走日期路徑，其餘走文字路徑
@@ -379,7 +382,7 @@ export function RosterSearch() {
     } finally {
       setIsLoading(false);
     }
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
   const handleSearch = () => performSearch();
 
@@ -392,6 +395,7 @@ export function RosterSearch() {
     if (quickSearchTab === 'all' && allFieldsQuery) filters.push(`全欄位：${allFieldsQuery}`);
     if (quickSearchTab === 'person' && nameQuery) filters.push(`人物姓名：${nameQuery}`);
     if (quickSearchTab === 'position' && positionQuery) filters.push(`職位：${positionQuery}`);
+    if (quickSearchTab === 'term' && termQuery) filters.push(`屆次：${termQuery}`);
     if (quickSearchTab === 'time' && (timeStartYear || timeEndYear)) {
       filters.push(`任職時間：${timeStartYear || '不限'}–${timeEndYear || '不限'}`);
     }
@@ -409,7 +413,7 @@ export function RosterSearch() {
       filters.push(`${prefix}${fieldLabel}：${statusLabel}`);
     });
     return filters;
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
   return (
     <div className="min-h-screen">
@@ -432,10 +436,11 @@ export function RosterSearch() {
           <div>
             <Tabs value={quickSearchTab} onValueChange={setQuickSearchTab} className="w-full">
               <div className="ink-tabs">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1">
                   {[
                     { key: 'all', label: '全欄位' },
                     { key: 'person', label: '人物姓名' },
+                    { key: 'term', label: '屆次' },
                     { key: 'position', label: '職位' },
                     { key: 'time', label: '時間' },
                   ].map(tab => (
@@ -459,6 +464,11 @@ export function RosterSearch() {
                 <p className="text-sm text-gray-600 mb-2">輸入人物姓名或別名進行查詢</p>
                 <Input placeholder="例如：孫中山" value={nameQuery}
                   onChange={e => setNameQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+              </TabsContent>
+              <TabsContent value="term" className="mt-4">
+                <p className="text-sm text-gray-600 mb-2">輸入屆次進行查詢</p>
+                <Input placeholder="例如：第1屆 第14屆" value={termQuery}
+                  onChange={e => setTermQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="position" className="mt-4">
                 <p className="text-sm text-gray-600 mb-2">輸入職位名稱進行查詢</p>
