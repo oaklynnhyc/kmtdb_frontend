@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronsUpDown, Plus, X, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -94,6 +94,17 @@ const filterFieldGroups = {
   ],
 };
 
+/** 快速查詢「屆次」下拉建議：可從清單選取，也可自行輸入（後端以 __icontains 模糊比對） */
+const TERM_OPTIONS = [
+  '興中會', '香港興中會總會', '中國同盟會', '國民黨', '中華革命黨', '中國國民黨（改組前）',
+  '上海中央第1屆', '上海中央第2屆',
+  '中國國民黨第1屆', '中國國民黨第2屆', '中國國民黨第3屆', '中國國民黨第4屆', '中國國民黨第5屆',
+  '中國國民黨第6屆', '中國國民黨第7屆', '中國國民黨第8屆', '中國國民黨第9屆', '中國國民黨第10屆',
+  '中國國民黨第11屆', '中國國民黨第12屆', '中國國民黨第13屆', '中國國民黨第14屆',
+  '三青籌', '三青臨', '三青團第1屆', '三青團第1任', '三青團第2屆', '三青團第2任',
+  '革實院',
+];
+
 const STORAGE_KEY = 'rosterSearchState';
 
 const DEFAULT_LIST_COLUMNS: ColumnConfig[] = [
@@ -112,6 +123,61 @@ function loadStoredState(): any {
   } catch {
     return null;
   }
+}
+
+/** 屆次 combobox：可自由輸入，也可從下拉清單選取；下拉樣式與進階查詢的 Select 一致 */
+function TermCombobox({
+  value,
+  onChange,
+  onSearch,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSearch: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const keyword = value.trim();
+  const filtered = keyword ? TERM_OPTIONS.filter(o => o.includes(keyword)) : TERM_OPTIONS;
+
+  return (
+    <div ref={ref} className="relative">
+      <Input
+        placeholder="可選擇或輸入屆次，例如：第1屆、1"
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) { setOpen(false); onSearch(); }
+        }}
+        className="paper-input"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md p-1">
+          {filtered.map(opt => (
+            <button
+              key={opt}
+              type="button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className="w-full text-left rounded-sm px-2 py-1.5 text-sm cursor-default hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function RosterSearch() {
@@ -467,9 +533,8 @@ export function RosterSearch() {
                   onChange={e => setNameQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="term" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">輸入屆次進行查詢</p>
-                <Input placeholder="例如：第1屆 第14屆" value={termQuery}
-                  onChange={e => setTermQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                <p className="text-sm text-gray-600 mb-2">可從清單選擇屆次，或自行輸入關鍵字查詢</p>
+                <TermCombobox value={termQuery} onChange={setTermQuery} onSearch={handleSearch} />
               </TabsContent>
               <TabsContent value="position" className="mt-4">
                 <p className="text-sm text-gray-600 mb-2">輸入職位名稱進行查詢</p>
