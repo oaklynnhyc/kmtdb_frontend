@@ -80,7 +80,42 @@ const TYPING_PHASES_GPDB = [
   "彙整相關資料…",
   "整理回覆內容…",
 ];
-const TYPING_PHASE_INTERVAL_MS = 1800;
+// 等候超時（比平均更久）時顯示的安撫語，避免畫面看起來卡死
+const TYPING_PHASE_OVERTIME = "資料量較大，仍在處理…";
+
+// A：滾動平均自學習——記錄最近 N 次「實際回應秒數」，據以推算輪播節奏
+const REPLY_TIMES_KEY = "chatReplyDurationsMs";
+const REPLY_TIMES_KEEP = 5;          // 只保留最近 5 次
+const DEFAULT_REPLY_MS = 7000;       // 尚無紀錄時的預設估值
+const PHASE_MIN_MS = 1000;           // 每段節奏下限 1 秒
+const PHASE_MAX_MS = 4000;           // 每段節奏上限 4 秒
+
+function readReplyTimes(): number[] {
+  try {
+    const arr = JSON.parse(localStorage.getItem(REPLY_TIMES_KEY) || "[]");
+    return Array.isArray(arr) ? arr.filter((n) => typeof n === "number" && n > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordReplyTime(ms: number) {
+  try {
+    const arr = readReplyTimes();
+    arr.push(ms);
+    while (arr.length > REPLY_TIMES_KEEP) arr.shift();
+    localStorage.setItem(REPLY_TIMES_KEY, JSON.stringify(arr));
+  } catch {
+    /* localStorage 不可用時忽略 */
+  }
+}
+
+// 依最近回應的平均時間，算出每段輪播文字該停留多久（夾在 1~4 秒）
+function computePhaseInterval(phaseCount: number): number {
+  const arr = readReplyTimes();
+  const avg = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : DEFAULT_REPLY_MS;
+  return Math.min(PHASE_MAX_MS, Math.max(PHASE_MIN_MS, avg / phaseCount));
+}
 
 // 本地開發用：模擬後端延遲（貼近正式模型回應時間，方便檢視等候動畫）。接上正式後端、移除 MOCK 區塊時一併刪除。
 const MOCK_DELAY_MS = 6000;
@@ -162,14 +197,20 @@ export function ChatBot() {
     }
   }, [messages, isTyping]);
 
-  // 等候回覆時，依序推進輪播狀態文字（停在最後一句，不循環）
+  // 等候回覆時推進輪播狀態文字：
+  //  A 節奏依「最近回應平均時間」自適應（每段 1~4 秒）；
+  //  B 末尾多一句超時安撫語，比平均更久時才出現，避免看起來卡死（停在該句、不循環）。
   const typingPhases = answerType === "ans_with_gpdb" ? TYPING_PHASES_GPDB : TYPING_PHASES_DEFAULT;
+  const phaseSequence = [...typingPhases, TYPING_PHASE_OVERTIME];
   useEffect(() => {
     if (!isTyping) { setTypingPhase(0); return; }
     setTypingPhase(0);
+    // 節奏 = 平均回應時間 ÷ 基本階段數，使基本階段大致在答案到達時走完
+    const interval = computePhaseInterval(typingPhases.length);
+    const lastIndex = typingPhases.length; // 含超時安撫語的最後一格
     const id = setInterval(() => {
-      setTypingPhase((p) => Math.min(p + 1, typingPhases.length - 1));
-    }, TYPING_PHASE_INTERVAL_MS);
+      setTypingPhase((p) => Math.min(p + 1, lastIndex));
+    }, interval);
     return () => clearInterval(id);
   }, [isTyping, answerType, typingPhases.length]);
 
@@ -205,6 +246,7 @@ export function ChatBot() {
     const query = inputValue;
     setInputValue("");
     setIsTyping(true);
+    const startedAt = performance.now();
 
     // Auto-collapse sidebar on first user message
     if (!hasUserMessage) setSidebarOpen(false);
@@ -238,6 +280,7 @@ export function ChatBot() {
           sqlText: "SELECT * FROM roster WHERE 姓名 LIKE '%...%' （模擬）",
         },
       };
+      recordReplyTime(performance.now() - startedAt);
       setMessages((prev) => [...prev, assistantMessage]);
       setIsTyping(false);
       return;
@@ -246,6 +289,7 @@ export function ChatBot() {
 
     try {
       const data = await chatbotQuery(query, answerType);
+      recordReplyTime(performance.now() - startedAt);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -581,7 +625,7 @@ export function ChatBot() {
                           <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
                         </div>
                         <span key={typingPhase} className="text-sm text-gray-500 animate-in fade-in duration-300">
-                          {typingPhases[typingPhase]}
+                          {phaseSequence[typingPhase]}
                         </span>
                       </div>
                     </div>
