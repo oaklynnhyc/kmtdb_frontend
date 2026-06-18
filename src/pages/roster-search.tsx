@@ -402,8 +402,9 @@ export function RosterSearch() {
     advancedConditions.forEach((c, index) => {
       if (c.value) {
         const field = Object.values(fieldGroups).flat().find(f => f.value === c.field);
+        const fieldLabel = c.field === 'all' ? '全欄位' : field?.label;
         const prefix = index > 0 ? ` ${c.logicOperator} ` : '';
-        filters.push(`${prefix}${field?.label}：${c.value}`);
+        filters.push(`${prefix}${fieldLabel}：${c.value}`);
       }
     });
     filterConditions.forEach((c, index) => {
@@ -540,6 +541,7 @@ export function RosterSearch() {
                       }}>
                       <SelectTrigger className="w-full md:w-64 border-neutral-300"><SelectValue /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">全欄位</SelectItem>
                         {Object.entries(fieldGroups).map(([groupName, fields]) => (
                           <div key={groupName}>
                             <div className="px-2 py-1.5 text-xs font-medium text-neutral-500">{groupName}</div>
