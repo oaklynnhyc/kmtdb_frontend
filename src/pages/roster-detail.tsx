@@ -167,14 +167,14 @@ export function RosterDetail() {
                 {(() => {
                   const cols = detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS;
 
-                  // 將欄位依分類分組，僅保留有值的欄位
+                  // 將欄位依分類分組；無資料的欄位仍固定顯示「原書未著錄」
                   const grouped: Record<string, { col: ColumnConfig; value: string }[]> = {};
                   for (const col of cols) {
-                    const value = rawRecord?.[col.field_name];
-                    if (value === null || value === undefined || value === '') continue;
+                    const raw = rawRecord?.[col.field_name];
+                    const value = (raw === null || raw === undefined || raw === '') ? '原書未著錄' : String(raw);
                     const category = FIELD_CATEGORY[col.field_name] ?? '其他';
                     if (!grouped[category]) grouped[category] = [];
-                    grouped[category].push({ col, value: String(value) });
+                    grouped[category].push({ col, value });
                   }
 
                   // 按 CATEGORY_ORDER 排序，未知分類排最後
@@ -220,7 +220,7 @@ export function RosterDetail() {
                   </div>
                   <div className="p-3 bg-neutral-50 rounded">
                     <p className="text-neutral-600 mb-1">單位</p>
-                    <p className="font-medium text-neutral-800">{record.unit1 || '—'}</p>
+                    <p className="font-medium text-neutral-800">{record.unit3 || record.unit2 || record.unit1 || '原書未著錄'}</p>
                   </div>
                   <div className="p-3 bg-neutral-50 rounded">
                     <p className="text-neutral-600 mb-1">任期</p>
