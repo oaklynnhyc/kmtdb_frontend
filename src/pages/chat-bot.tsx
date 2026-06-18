@@ -66,6 +66,25 @@ const MOCK_REPLIES: Record<string, { summary: string; detail: string }> = {
   },
 };
 
+// 等候回覆時輪播的狀態文字；依模式切換（官職資料庫模式多一段「檢索官職資料庫…」）
+const TYPING_PHASES_DEFAULT = [
+  "正在理解您的問題…",
+  "檢索職名錄資料庫…",
+  "彙整相關資料…",
+  "整理回覆內容…",
+];
+const TYPING_PHASES_GPDB = [
+  "正在理解您的問題…",
+  "檢索職名錄資料庫…",
+  "檢索官職資料庫…",
+  "彙整相關資料…",
+  "整理回覆內容…",
+];
+const TYPING_PHASE_INTERVAL_MS = 1800;
+
+// 本地開發用：模擬後端延遲（貼近正式模型回應時間，方便檢視等候動畫）。接上正式後端、移除 MOCK 區塊時一併刪除。
+const MOCK_DELAY_MS = 6000;
+
 export function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -78,6 +97,7 @@ export function ChatBot() {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [typingPhase, setTypingPhase] = useState(0);
   const [answerType, setAnswerType] = useState<AnswerType>("ans_summary");
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
@@ -142,6 +162,17 @@ export function ChatBot() {
     }
   }, [messages, isTyping]);
 
+  // 等候回覆時，依序推進輪播狀態文字（停在最後一句，不循環）
+  const typingPhases = answerType === "ans_with_gpdb" ? TYPING_PHASES_GPDB : TYPING_PHASES_DEFAULT;
+  useEffect(() => {
+    if (!isTyping) { setTypingPhase(0); return; }
+    setTypingPhase(0);
+    const id = setInterval(() => {
+      setTypingPhase((p) => Math.min(p + 1, typingPhases.length - 1));
+    }, TYPING_PHASE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [isTyping, answerType, typingPhases.length]);
+
   const toggleDetails = (messageId: string) => {
     setExpandedDetails((prev) => {
       const next = new Set(prev);
@@ -182,8 +213,8 @@ export function ChatBot() {
     // ── MOCK START ─────────────────────────────────────────
     const useMock = !import.meta.env.VITE_API_READY;
     if (useMock) {
-      // 模擬後端延遲
-      await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
+      // 模擬後端延遲（拉長以貼近正式模型回應時間、方便檢視等候動畫；dev-only）
+      await new Promise((r) => setTimeout(r, MOCK_DELAY_MS + Math.random() * 2000));
       const mockSummary = MOCK_REPLIES[query]?.summary
         ?? `根據職名錄資料庫查詢，與「${query}」相關的紀錄共有 17 筆，涵蓋第一屆至第六屆中央執行委員會多個職位。主要集中於中央執行委員會常務委員會及組織部相關單位。`;
       const mockDetail = MOCK_REPLIES[query]?.detail
@@ -542,11 +573,16 @@ export function ChatBot() {
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#7ed5c5] to-[#16a085] flex items-center justify-center">
                       <Bot className="w-4 h-4 text-white" />
                     </div>
-                    <div className="paper-card rounded-lg p-4">
-                      <div className="flex space-x-2">
-                        <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                        <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
+                    <div className="paper-card rounded-lg px-4 py-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex space-x-2">
+                          <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                          <div className="w-2 h-2 bg-[#16a085] rounded-full animate-bounce" style={{ animationDelay: "0.4s" }} />
+                        </div>
+                        <span key={typingPhase} className="text-sm text-gray-500 animate-in fade-in duration-300">
+                          {typingPhases[typingPhase]}
+                        </span>
                       </div>
                     </div>
                   </div>
