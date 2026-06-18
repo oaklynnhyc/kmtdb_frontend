@@ -452,6 +452,29 @@ export function RosterSearch() {
 
   const handleSearch = () => performSearch();
 
+  // 清空所有檢索條件與查詢結果（並清掉 sessionStorage 暫存）
+  const handleClear = () => {
+    setQuickSearchTab('all');
+    setAllFieldsQuery('');
+    setNameQuery('');
+    setPositionQuery('');
+    setTermQuery('');
+    setTimeStartYear('');
+    setTimeEndYear('');
+    setAdvancedConditions([
+      { id: 'default-1', field: 'name', operator: 'contains', value: '', logicOperator: 'AND' },
+    ]);
+    setFilterConditions([]);
+    setAllResults([]);
+    setTotalCount(0);
+    setCurrentPage(1);
+    setHasSearched(false);
+    setSortColumn(null);
+    setSortDirection('asc');
+    setError('');
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleSearch();
   };
@@ -642,6 +665,9 @@ export function RosterSearch() {
                   </Button>
                   <Button onClick={addFilterCondition} variant="outline" size="sm" className="border-neutral-300 text-neutral-700">
                     <Plus className="w-4 h-4 mr-2" />新增篩選條件
+                  </Button>
+                  <Button onClick={handleClear} variant="outline" size="sm" className="border-neutral-300 text-neutral-700">
+                    <X className="w-4 h-4 mr-2" />清空所有條件
                   </Button>
                 </div>
 
