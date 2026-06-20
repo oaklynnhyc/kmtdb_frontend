@@ -196,6 +196,8 @@ export interface ChatResponse {
   brief_reply: string;   // 簡要回覆
   reply: string;         // 詳細回覆
   agent_steps: any[];
+  rate_limited?: boolean;  // 達使用上限時為 true
+  retry_after?: number;    // 還要等幾秒可再用（限流時）
 }
 
 export async function chatbotQuery(message: string, answerType: string = 'ans_summary') {

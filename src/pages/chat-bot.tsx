@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, Bot, User, ChevronDown, ChevronUp, Database, FileText,
-  PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown,
+  PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown, Clock,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Markdown } from "@/components/ui/markdown";
@@ -16,7 +16,8 @@ interface Message {
   detailedContent?: string;   // 詳細回覆
   timestamp: Date;
   mode?: AnswerType;          // 此則回覆所使用的回答模式（僅 assistant 訊息）
-  type?: "modeSwitch";        // 系統訊息類型（例如模式切換分隔線）
+  type?: "modeSwitch" | "rateLimit";  // 系統訊息類型（模式切換分隔線／達使用上限通知）
+  resetAt?: number;           // 限流通知用：可再次提問的 epoch 毫秒
   queryDetails?: {
     sqlJsonl?: string;
     introContext?: string;
@@ -119,6 +120,9 @@ function computePhaseInterval(phaseCount: number): number {
 
 // 本地開發用：模擬後端延遲（貼近正式模型回應時間，方便檢視等候動畫）。接上正式後端、移除 MOCK 區塊時一併刪除。
 const MOCK_DELAY_MS = 6000;
+// 本地預覽用：設為 true 時，模擬模式會回傳「達使用上限」以檢視限額 UI（dev-only）。
+const MOCK_FORCE_RATELIMIT = false;
+const MOCK_RATELIMIT_RETRY_AFTER = 300; // 秒
 
 export function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
@@ -134,6 +138,9 @@ export function ChatBot() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingPhase, setTypingPhase] = useState(0);
   const [answerType, setAnswerType] = useState<AnswerType>("ans_summary");
+  // 限流：rateLimitUntil 為可再次提問的 epoch 毫秒；nowTs 每秒更新以驅動倒數
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const [nowTs, setNowTs] = useState(() => Date.now());
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
@@ -214,6 +221,26 @@ export function ChatBot() {
     return () => clearInterval(id);
   }, [isTyping, answerType, typingPhases.length]);
 
+  // 限流倒數：每秒更新 nowTs，倒數歸零時自動解除限流
+  useEffect(() => {
+    if (rateLimitUntil == null) return;
+    const id = setInterval(() => {
+      const t = Date.now();
+      setNowTs(t);
+      if (t >= rateLimitUntil) setRateLimitUntil(null);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitUntil]);
+
+  const isRateLimited = rateLimitUntil != null && nowTs < rateLimitUntil;
+  // 格式化剩餘時間為 mm:ss
+  const formatRemaining = (untilMs: number) => {
+    const ms = Math.max(0, untilMs - nowTs);
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const toggleDetails = (messageId: string) => {
     setExpandedDetails((prev) => {
       const next = new Set(prev);
@@ -233,7 +260,7 @@ export function ChatBot() {
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isTyping) return;
+    if (!inputValue.trim() || isTyping || isRateLimited) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -257,6 +284,23 @@ export function ChatBot() {
     if (useMock) {
       // 模擬後端延遲（拉長以貼近正式模型回應時間、方便檢視等候動畫；dev-only）
       await new Promise((r) => setTimeout(r, MOCK_DELAY_MS + Math.random() * 2000));
+      // dev-only：預覽限額 UI
+      if (MOCK_FORCE_RATELIMIT) {
+        const mins = Math.max(Math.floor(MOCK_RATELIMIT_RETRY_AFTER / 60), 1);
+        const resetAt = Date.now() + MOCK_RATELIMIT_RETRY_AFTER * 1000;
+        setRateLimitUntil(resetAt);
+        setNowTs(Date.now());
+        setMessages((prev) => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `您在短時間內的提問次數較多，請於約 ${mins} 分鐘後再試。`,
+          timestamp: new Date(),
+          type: "rateLimit",
+          resetAt,
+        }]);
+        setIsTyping(false);
+        return;
+      }
       const mockSummary = MOCK_REPLIES[query]?.summary
         ?? `根據職名錄資料庫查詢，與「${query}」相關的紀錄共有 17 筆，涵蓋第一屆至第六屆中央執行委員會多個職位。主要集中於中央執行委員會常務委員會及組織部相關單位。`;
       const mockDetail = MOCK_REPLIES[query]?.detail
@@ -289,6 +333,21 @@ export function ChatBot() {
 
     try {
       const data = await chatbotQuery(query, answerType);
+      // 達使用上限：顯示限額通知卡並啟動倒數（不計入回應時間統計）
+      if (data.rate_limited) {
+        const resetAt = Date.now() + (data.retry_after ?? 0) * 1000;
+        setRateLimitUntil(resetAt);
+        setNowTs(Date.now());
+        setMessages((prev) => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.brief_reply,
+          timestamp: new Date(),
+          type: "rateLimit",
+          resetAt,
+        }]);
+        return;
+      }
       recordReplyTime(performance.now() - startedAt);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -434,6 +493,37 @@ export function ChatBot() {
           <ScrollArea className="h-full ink-scrollbar" ref={scrollRef}>
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-4">
               {messages.map((message) => {
+                if (message.type === "rateLimit") {
+                  const stillLimited = message.resetAt != null && nowTs < message.resetAt;
+                  return (
+                    <div key={message.id} className="flex justify-start">
+                      <div className="flex space-x-3 max-w-[85%]">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#e8d4a0] to-[#d4af37] flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4 text-[#2c3e50]" />
+                        </div>
+                        <div
+                          className="paper-card rounded-lg p-4 border-l-2 border-[#d4af37]"
+                          style={{ backgroundColor: "rgba(212, 175, 55, 0.06)" }}
+                        >
+                          <p className="text-sm font-medium ink-text mb-1">已達使用上限</p>
+                          <p className="text-sm text-gray-600 leading-relaxed">{message.content}</p>
+                          {message.resetAt != null && (
+                            <div className="mt-2 flex items-center gap-1.5 text-sm">
+                              <Clock className="w-3.5 h-3.5 text-[#96852a]" />
+                              {stillLimited ? (
+                                <span className="text-[#96852a]">
+                                  可於 <span className="font-mono font-medium">{formatRemaining(message.resetAt)}</span> 後再次提問
+                                </span>
+                              ) : (
+                                <span className="text-[var(--jade)]">現在可以再次提問了</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
                 if (message.type === "modeSwitch" && message.mode) {
                   const meta = MODE_META[message.mode];
                   const Icon = meta.icon;
@@ -643,11 +733,16 @@ export function ChatBot() {
             <div className="flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-[var(--jade)] focus-within:ring-1 focus-within:ring-[var(--jade)]/20 transition-colors">
               <input
                 type="text"
-                placeholder="輸入您的問題..."
+                placeholder={
+                  isRateLimited && rateLimitUntil != null
+                    ? `已達使用上限，可於 ${formatRemaining(rateLimitUntil)} 後再試`
+                    : "輸入您的問題..."
+                }
                 value={inputValue}
+                disabled={isRateLimited}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleSend()}
-                className="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                className="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none disabled:cursor-not-allowed"
               />
 
               {/* 模式選擇器 pill — 輸入框內靠右 */}
@@ -716,7 +811,7 @@ export function ChatBot() {
               {/* 送出按鈕 */}
               <button
                 onClick={handleSend}
-                disabled={!inputValue.trim() || isTyping}
+                disabled={!inputValue.trim() || isTyping || isRateLimited}
                 className="flex-shrink-0 p-2 mr-1 rounded-md text-white bg-[var(--ink-dark)] hover:bg-[var(--ink-medium)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-4 h-4" />
