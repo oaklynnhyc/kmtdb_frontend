@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, Bot, User, ChevronDown, ChevronUp, Database, FileText,
-  PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown, Clock,
+  PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown, Clock, AlertCircle,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Markdown } from "@/components/ui/markdown";
@@ -16,7 +16,7 @@ interface Message {
   detailedContent?: string;   // 詳細回覆
   timestamp: Date;
   mode?: AnswerType;          // 此則回覆所使用的回答模式（僅 assistant 訊息）
-  type?: "modeSwitch" | "rateLimit";  // 系統訊息類型（模式切換分隔線／達使用上限通知）
+  type?: "modeSwitch" | "rateLimit" | "serviceError";  // 系統訊息類型（模式切換／達使用上限／服務異常通知）
   resetAt?: number;           // 限流通知用：可再次提問的 epoch 毫秒
   queryDetails?: {
     sqlJsonl?: string;
@@ -359,13 +359,23 @@ export function ChatBot() {
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err: any) {
-      const errorMessage: Message = {
+      // 真實錯誤只記給工程除錯，對使用者一律顯示友善訊息（不外洩 HTML／狀態碼／例外內容）
+      console.error("Chatbot 請求失敗：", err);
+      const isNetworkError =
+        err instanceof TypeError || /fetch|network|failed to fetch/i.test(err?.message || "");
+      const friendly =
+        err?.name === "AuthError"
+          ? "登入狀態已失效，請重新登入後再使用研究助理。"
+          : isNetworkError
+            ? "目前無法連線到伺服器，請稍候再試。"
+            : "研究助理暫時無法使用，請稍後再試。";
+      setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `抱歉，處理您的問題時發生錯誤：${err.message || "未知錯誤"}。請稍後再試。`,
+        content: friendly,
         timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+        type: "serviceError",
+      }]);
     } finally {
       setIsTyping(false);
     }
@@ -519,6 +529,24 @@ export function ChatBot() {
                               )}
                             </div>
                           )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                if (message.type === "serviceError") {
+                  return (
+                    <div key={message.id} className="flex justify-start">
+                      <div className="flex space-x-3 max-w-[85%]">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center flex-shrink-0">
+                          <AlertCircle className="w-4 h-4 text-gray-500" />
+                        </div>
+                        <div
+                          className="paper-card rounded-lg p-4 border-l-2 border-gray-300"
+                          style={{ backgroundColor: "rgba(100, 116, 139, 0.06)" }}
+                        >
+                          <p className="text-sm font-medium ink-text mb-1">服務暫時無法使用</p>
+                          <p className="text-sm text-gray-600 leading-relaxed">{message.content}</p>
                         </div>
                       </div>
                     </div>
