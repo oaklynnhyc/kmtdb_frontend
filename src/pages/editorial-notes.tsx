@@ -141,31 +141,31 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">組織</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        甲編各時期組織名稱。乙編之中國國民黨。
+                        甲編各時期組織名稱。乙編之中國國民黨。例如：興中會、中國國民黨
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">一級單位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        甲編本部一級單位。乙編第一至六屆中央執行、監察委員會，第七至十四屆中央委員會、中央評議委員會，三民主義青年團與中央改造委員會亦列入一級單位。
+                        甲編本部一級單位。乙編第一至六屆中央執行、監察委員會，第七至十四屆中央委員會，改造後之中央評議委員，三民主義青年團與中央改造委員會亦列入一級單位。例如：幹事部、上海中央執行委員會、中央委員會
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">二級單位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        一級單位下轄之直屬單位。
+                        一級單位下轄之直屬單位。例如：文化工作會、工人部
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">三級單位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        二級單位下轄之直屬單位。
+                        二級單位下轄之直屬單位。例如：調查統計局、中央訓練團
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">職位</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職銜
+                        職銜。例如：中央委員、主任委員
                       </td>
                     </tr>
                     <tr>
@@ -183,43 +183,43 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">屆次</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。中央改造委員會、三民主義青年團獨立列出。
+                        依原書著錄。中央改造委員會、三民主義青年團獨立列出。例如：中國國民黨（改組前）、中國國民黨第7屆
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">起始日期</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。選舉產生者，以選出日期為起始日期。
+                        日期改以西元紀年。有明確起始日期者，以該日期為起始日期。選舉產生者，以選出日期為起始日期。中央常務委員以當次中央委員會全體會議開會第一天為起始日期，如無第一次者，以該屆全國代表大會開會第一天為起始日期。例如：1894-11-24
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">起始日期來源／原因</td>
+                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">任用依據</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。例如：中常會第108次會議、中監會第3次會議
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">產生方式</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。例如：通過、選舉
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">結束日期</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        有明確離職原因者，以該日期為結束日期。中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員等由全國代表大會選舉產生者，以下屆全國代表大會開會前一天為結束日期。中央常務委員以下次中央委員會全體會議開會前一天為結束日期，如無下次者，以下屆全國代表大會開會前一天為結束日期。
+                        日期改以西元紀年。有明確離職日期者，以該日期為結束日期。中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員等由全國代表大會選舉產生者，以下屆全國代表大會開會前一天為結束日期。中央常務委員以下次中央委員會全體會議開會前一天為結束日期，如無下次者，以下屆全國代表大會開會前一天為結束日期。例如：1925-12-31
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">結束日期來源／原因</td>
+                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">離職依據</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。例如：中常會第56次會議、中監會第8次常會
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">離職原因</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。在職期間亡故者，若原書未註記，以報紙新聞發布為準，並於「其他出處來源」欄位註記。例如：另有任用、任期結束
                       </td>
                     </tr>
                     <tr>
@@ -237,13 +237,13 @@ export function EditorialNotes() {
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">兼／代</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。例如：兼任、暫行代理
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">調／升任單位職稱</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
+                        依原書著錄。例如：內政部政務次長、中華日報董事長
                       </td>
                     </tr>
                     <tr>
@@ -253,7 +253,7 @@ export function EditorialNotes() {
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">地點</td>
+                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">地點備註</td>
                       <td className="px-4 py-3 text-gray-700 leading-relaxed">
                         組織／單位所在城市，依原書著錄。
                       </td>
