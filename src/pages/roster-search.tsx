@@ -208,7 +208,6 @@ export function RosterSearch() {
   const [timeStartYear, setTimeStartYear] = useState<string>(stored?.timeStartYear ?? '');
   const [timeEndYear, setTimeEndYear] = useState<string>(stored?.timeEndYear ?? '');
 
-  const [showAdvanced, setShowAdvanced] = useState<boolean>(stored?.showAdvanced ?? false);
   const [advancedConditions, setAdvancedConditions] = useState<QueryCondition[]>(
     stored?.advancedConditions ?? [
       { id: 'default-1', field: 'name', operator: 'contains', value: '', logicOperator: 'AND' },
@@ -243,13 +242,13 @@ export function RosterSearch() {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery,
-        timeStartYear, timeEndYear, showAdvanced, advancedConditions,
+        timeStartYear, timeEndYear, advancedConditions,
         filterConditions, allResults, totalCount, currentPage, hasSearched,
         sortColumn, sortDirection,
       }));
     } catch {}
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear,
-      timeEndYear, showAdvanced, advancedConditions, filterConditions, allResults,
+      timeEndYear, advancedConditions, filterConditions, allResults,
       totalCount, currentPage, hasSearched, sortColumn, sortDirection]);
 
   const pageSize = 50;
@@ -327,7 +326,6 @@ export function RosterSearch() {
       valueStatus: '有值',
       logicOperator: 'AND',
     }]);
-    if (!showAdvanced) setShowAdvanced(true);
   };
 
   const removeFilterCondition = (id: string) => {
@@ -643,14 +641,9 @@ export function RosterSearch() {
         {/* Advanced Search */}
         <div className="paper-card rounded-lg mb-6 ink-border">
           <CardHeader>
-            <button onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between text-left">
-              <CardTitle className="text-base">進階查詢</CardTitle>
-              {showAdvanced ? <ChevronUp className="w-5 h-5 text-neutral-500" /> : <ChevronDown className="w-5 h-5 text-neutral-500" />}
-            </button>
+            <CardTitle className="text-base">進階查詢</CardTitle>
           </CardHeader>
-          {showAdvanced && (
-            <CardContent>
+          <CardContent>
               <div className="space-y-4">
                 {advancedConditions.map((condition, index) => (
                   <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
@@ -770,9 +763,17 @@ export function RosterSearch() {
                     ))}
                   </>
                 )}
+
+                {/* 進階查詢搜尋按鈕 */}
+                <div className="pt-2 flex justify-stretch sm:justify-end">
+                  <button onClick={handleSearch} disabled={isLoading}
+                    className="ink-button w-full sm:w-auto px-6 sm:px-8 py-2 rounded flex items-center justify-center space-x-2 disabled:opacity-50">
+                    <SearchIcon className="w-4 h-4" />
+                    <span>{isLoading ? '搜尋中...' : '搜尋'}</span>
+                  </button>
+                </div>
               </div>
             </CardContent>
-          )}
         </div>
 
         {/* Query Summary */}
