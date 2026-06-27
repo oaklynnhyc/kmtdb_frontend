@@ -130,7 +130,7 @@ export function ChatBot() {
       id: "1",
       role: "assistant",
       content:
-        "您好，歡迎使用中國國民黨職名錄檢索系統研究助理。我可以協助您查詢職名錄資料庫、解答關於職名錄資料的疑問、提供歷史背景說明，以及協助您的研究工作。請問有什麼可以為您服務的嗎？",
+        "您好，歡迎使用中國國民黨職名錄檢索系統AI深度探索。我可以協助您查詢職名錄資料庫、解答關於職名錄資料的疑問、提供歷史背景說明，以及協助您的研究工作。請問有什麼可以為您服務的嗎？",
       timestamp: new Date(),
     },
   ]);
@@ -365,10 +365,10 @@ export function ChatBot() {
         err instanceof TypeError || /fetch|network|failed to fetch/i.test(err?.message || "");
       const friendly =
         err?.name === "AuthError"
-          ? "登入狀態已失效，請重新登入後再使用研究助理。"
+          ? "登入狀態已失效，請重新登入後再使用AI深度探索。"
           : isNetworkError
             ? "目前無法連線到伺服器，請稍候再試。"
-            : "研究助理暫時無法使用，請稍後再試。";
+            : "AI深度探索暫時無法使用，請稍後再試。";
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -413,7 +413,7 @@ export function ChatBot() {
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-wide">研究助理</h1>
+                <h1 className="text-base font-bold tracking-wide">AI深度探索</h1>
                 <p className="text-[11px] text-gray-400 leading-tight">Research Assistant</p>
               </div>
             </div>
@@ -494,7 +494,7 @@ export function ChatBot() {
           </button>
           <div className="ml-3 flex items-center space-x-2 seal-left">
             <Bot className="w-4.5 h-4.5 text-[var(--jade)]" />
-            <span className="text-sm font-medium ink-text">檢索系統研究助理</span>
+            <span className="text-sm font-medium ink-text">檢索系統AI深度探索</span>
           </div>
         </div>
 
@@ -846,7 +846,7 @@ export function ChatBot() {
               </button>
             </div>
             <p className="text-[11px] text-gray-400 text-center">
-              本研究助理為AI生成資訊，詢答結果僅供參考。
+              本AI深度探索為AI生成資訊，詢答結果僅供參考。
             </p>
           </div>
         </div>
