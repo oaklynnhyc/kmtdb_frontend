@@ -544,7 +544,9 @@ export function RosterSearch() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Quick Search */}
-        <div className="paper-card rounded-lg mb-6 seal-corner p-4 sm:p-6">
+        {/* relative z-20：墊高快速查詢卡的堆疊脈絡，避免屆次下拉溢出部分被進階查詢卡覆蓋
+            （paper-card 的 backdrop-filter 會建立堆疊脈絡，需在卡層級提升 z-index） */}
+        <div className="paper-card rounded-lg mb-6 seal-corner p-4 sm:p-6 relative z-20">
           <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 ink-text seal-left">快速查詢</h3>
           <div>
             <Tabs value={quickSearchTab} onValueChange={setQuickSearchTab} className="w-full">
