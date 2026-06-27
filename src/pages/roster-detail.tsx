@@ -23,7 +23,7 @@ const FIELD_CATEGORY: Record<string, string> = {
   '起始日期': '任期時間', '結束日期': '任期時間',
   '起始日期來源_原因': '任期時間', '結束日期來源_原因': '任期時間',
   // 任用與異動
-  '產生方式': '任用與異動', '兼_代': '任用與異動', //'序位': '任用與異動',
+  '產生方式': '任用與異動', '兼_代': '任用與異動', '序位': '任用與異動',
   '離職原因': '任用與異動', '調_升任單位職稱': '任用與異動',
   // 其他
   '地點': '其他', '其他備註': '其他', '其他出處來源': '其他',
@@ -115,15 +115,15 @@ export function RosterDetail() {
     );
   }
 
-  const InfoRow = ({ label, value, icon: Icon }: { label: string; value?: string | number; icon?: any }) => {
-    if (!value && value !== 0) return null;
+  // 詳目欄位列：一律顯示。實際資料用一般色；空值占位（— 或留白）用淡色，避免被誤認為內容
+  const InfoRow = ({ label, value }: { label: string; value: string }) => {
+    const isPlaceholder = value === '' || value === '—';
     return (
-      <div>
-        <p className="text-sm text-gray-500 mb-1">{label}</p>
-        <div className="flex items-center space-x-2">
-          {Icon && <Icon className="w-4 h-4 text-gray-400" />}
-          <p className="text-base text-gray-700">{value}</p>
-        </div>
+      <div className="border-b border-gray-100 pb-2">
+        <p className="text-xs text-gray-400 mb-1">{label}</p>
+        <p className={`text-[15px] leading-relaxed ${isPlaceholder ? 'text-gray-300' : 'text-gray-700'}`}>
+          {value || ' '}
+        </p>
       </div>
     );
   };
@@ -167,12 +167,14 @@ export function RosterDetail() {
                 {(() => {
                   const cols = detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS;
 
-                  // 將欄位依分類分組；無資料的欄位仍固定顯示「原書未著錄」
+                  // 將欄位依分類分組；所有欄位皆顯示。無資料時：
+                  //   「其他」區塊留白，其餘比照簡目顯示「—」
                   const grouped: Record<string, { col: ColumnConfig; value: string }[]> = {};
                   for (const col of cols) {
                     const raw = rawRecord?.[col.field_name];
-                    const value = (raw === null || raw === undefined || raw === '') ? '原書未著錄' : String(raw);
+                    const isEmpty = raw === null || raw === undefined || raw === '';
                     const category = FIELD_CATEGORY[col.field_name] ?? '其他';
+                    const value = isEmpty ? (category === '其他' ? '' : '—') : String(raw);
                     if (!grouped[category]) grouped[category] = [];
                     grouped[category].push({ col, value });
                   }
