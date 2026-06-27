@@ -130,10 +130,12 @@ function TermCombobox({
   value,
   onChange,
   onSearch,
+  onSelect,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSearch: () => void;
+  onSelect?: (v: string) => void;  // 從清單選取時觸發（直接查詢）
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -168,7 +170,7 @@ function TermCombobox({
               key={opt}
               type="button"
               onMouseDown={e => e.preventDefault()}
-              onClick={() => { onChange(opt); setOpen(false); }}
+              onClick={() => { onChange(opt); setOpen(false); onSelect?.(opt); }}
               className="w-full text-left rounded-sm px-2 py-1.5 text-sm cursor-default hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               {opt}
@@ -177,6 +179,20 @@ function TermCombobox({
         </div>
       )}
     </div>
+  );
+}
+
+/** 快速查詢分頁的條列說明（暖金 ◆ 標記，貼合網站風格） */
+function QuickHint({ items }: { items: string[] }) {
+  return (
+    <ul className="text-sm text-gray-600 mb-3 space-y-1">
+      {items.map((t, i) => (
+        <li key={i} className="flex gap-1.5">
+          <span className="text-[#d4af37] flex-shrink-0 leading-relaxed">◆</span>
+          <span className="leading-relaxed">{t}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -452,6 +468,15 @@ export function RosterSearch() {
 
   const handleSearch = () => performSearch();
 
+  // 屆次瀏覽：從清單選取後直接查詢。用 ref 保存最新 performSearch，
+  // 待 termQuery 狀態更新後的下一個 render 再觸發（避免讀到舊值）。
+  const performSearchRef = useRef(performSearch);
+  performSearchRef.current = performSearch;
+  const [autoSearchTick, setAutoSearchTick] = useState(0);
+  useEffect(() => {
+    if (autoSearchTick > 0) performSearchRef.current();
+  }, [autoSearchTick]);
+
   // 清空所有檢索條件與查詢結果（並清掉 sessionStorage 暫存）
   const handleClear = () => {
     setQuickSearchTab('all');
@@ -530,9 +555,9 @@ export function RosterSearch() {
                   {[
                     { key: 'all', label: '全欄位' },
                     { key: 'person', label: '人物姓名' },
-                    { key: 'term', label: '屆次' },
                     { key: 'position', label: '職位' },
                     { key: 'time', label: '時間' },
+                    { key: 'term', label: '屆次瀏覽' },
                   ].map(tab => (
                     <button
                       key={tab.key}
@@ -546,26 +571,49 @@ export function RosterSearch() {
                 </div>
               </div>
               <TabsContent value="all" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">以關鍵字對資料庫進行查詢</p>
-                <Input placeholder="例如：孫中山 興中會 文化工作會" value={allFieldsQuery}
+                <QuickHint items={[
+                  '建議以單一關鍵字查詢；多個關鍵字請搭配進階查詢。',
+                  '若查詢內容屬於特定類型（如屆次、人物姓名、職位或時間），建議切換至對應頁籤進行查詢。',
+                  '如於快速查詢欄位以空格分隔多個關鍵詞，系統會將空格視為「或（OR）」進行查詢。',
+                  '屆次請使用半形阿拉伯數字。',
+                  '【搜尋欄範例】孫中山 興中會 文化工作會 第7屆',
+                ]} />
+                <Input placeholder="孫中山 興中會 文化工作會 第7屆" value={allFieldsQuery}
                   onChange={e => setAllFieldsQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="person" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">輸入人物姓名或別名進行查詢</p>
-                <Input placeholder="例如：孫中山" value={nameQuery}
+                <QuickHint items={[
+                  '依人物姓名或別名查詢。',
+                  '【搜尋欄範例】胡漢民 陳辭修 吳稚暉',
+                ]} />
+                <Input placeholder="胡漢民 陳辭修 吳稚暉" value={nameQuery}
                   onChange={e => setNameQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="term" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">可從清單選擇屆次，或自行輸入關鍵字查詢</p>
-                <TermCombobox value={termQuery} onChange={setTermQuery} onSearch={handleSearch} />
+                <QuickHint items={[
+                  '點選下拉選單選擇屆次或組織。',
+                ]} />
+                <TermCombobox
+                  value={termQuery}
+                  onChange={setTermQuery}
+                  onSearch={handleSearch}
+                  onSelect={() => setAutoSearchTick(t => t + 1)}
+                />
               </TabsContent>
               <TabsContent value="position" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">輸入職位名稱進行查詢</p>
-                <Input placeholder="例如：主席 部長 委員" value={positionQuery}
+                <QuickHint items={[
+                  '依職位名稱查詢。',
+                  '【搜尋欄範例】中央委員 中常委 主任委員',
+                ]} />
+                <Input placeholder="中央委員 中常委 主任委員" value={positionQuery}
                   onChange={e => setPositionQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="time" className="mt-4">
-                <p className="text-sm text-gray-600 mb-2">選擇任職時間範圍進行查詢</p>
+                <QuickHint items={[
+                  '依任職期間查詢。',
+                  '使用右側日曆選擇日期，或自行輸入日期；日期請使用半形阿拉伯數字。',
+                  '起始日期與結束日期可擇一填寫，亦可僅輸入年份進行查詢。',
+                ]} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm ink-text mb-2 font-medium">起始日期</label>
