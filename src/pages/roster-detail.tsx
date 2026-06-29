@@ -240,7 +240,7 @@ export function RosterDetail() {
               </CardHeader>
               <CardContent>
                 <div className="p-3 bg-neutral-100 rounded text-xs font-mono break-words leading-relaxed">
-                  〈{record.name}〉，收入「中國國民黨職名錄檢索系統」：{window.location.href}（{new Date().toLocaleDateString('zh-TW')}點閱）。
+                  〈{record.name}〉，收入「國立政治大學圖書館中國國民黨職名錄檢索系統」。{window.location.href}（{new Date().toLocaleDateString('zh-TW')}點閱）。
                 </div>
                 {/* 依 0601 修訂，引用格式下方淺灰說明文字隱藏（保留原內容以備還原）
                 <p className="text-xs text-neutral-500 mt-3 leading-relaxed">
