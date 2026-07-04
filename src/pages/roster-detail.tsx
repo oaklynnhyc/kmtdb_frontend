@@ -21,12 +21,12 @@ const FIELD_CATEGORY: Record<string, string> = {
   '三級單位': '組織與職位', '職位': '組織與職位', '屆次': '組織與職位',
   // 任期時間
   '起始日期': '任期時間', '結束日期': '任期時間',
-  '起始日期來源_原因': '任期時間', '結束日期來源_原因': '任期時間',
+  '任用依據': '任期時間', '離職依據': '任期時間',
   // 任用與異動
   '產生方式': '任用與異動', '兼_代': '任用與異動', '序位': '任用與異動',
   '離職原因': '任用與異動', '調_升任單位職稱': '任用與異動',
   // 其他
-  '地點': '其他', '其他備註': '其他', '其他出處來源': '其他',
+  '地點備註': '其他', '其他備註': '其他', '其他出處來源': '其他',
 };
 
 /** 分類顯示順序 */
@@ -41,8 +41,8 @@ const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
   { column_name: '屆次',           field_name: '屆次',           display_label: '屆次',           sort_order_list: 6,  sort_order_detail: 6  },
   { column_name: '起始日期',        field_name: '起始日期',        display_label: '起始日期',        sort_order_list: 7,  sort_order_detail: 7  },
   { column_name: '結束日期',        field_name: '結束日期',        display_label: '結束日期',        sort_order_list: 8,  sort_order_detail: 8  },
-  { column_name: '起始日期來源／原因', field_name: '起始日期來源_原因', display_label: '起始日期來源／原因', sort_order_list: 9,  sort_order_detail: 9  },
-  { column_name: '結束日期來源／原因', field_name: '結束日期來源_原因', display_label: '結束日期來源／原因', sort_order_list: 10, sort_order_detail: 10 },
+  { column_name: '任用依據',        field_name: '任用依據',        display_label: '任用依據',        sort_order_list: 9,  sort_order_detail: 9  },
+  { column_name: '離職依據',        field_name: '離職依據',        display_label: '離職依據',        sort_order_list: 10, sort_order_detail: 10 },
   { column_name: '產生方式',        field_name: '產生方式',        display_label: '產生方式',        sort_order_list: 11, sort_order_detail: 11 },
   { column_name: '兼／代',         field_name: '兼_代',          display_label: '兼／代',         sort_order_list: 12, sort_order_detail: 12 },
   { column_name: '序位',           field_name: '序位',           display_label: '序位',           sort_order_list: 13, sort_order_detail: 13 },
@@ -50,7 +50,7 @@ const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
   { column_name: '調／升任單位職稱',  field_name: '調_升任單位職稱',  display_label: '調／升任單位職稱',  sort_order_list: 15, sort_order_detail: 15 },
   { column_name: '前任姓名',        field_name: '前任姓名',        display_label: '前任姓名',        sort_order_list: 16, sort_order_detail: 16 },
   { column_name: '後任姓名',        field_name: '後任姓名',        display_label: '後任姓名',        sort_order_list: 17, sort_order_detail: 17 },
-  { column_name: '地點',           field_name: '地點',           display_label: '地點',           sort_order_list: 18, sort_order_detail: 18 },
+  { column_name: '地點備註',        field_name: '地點備註',        display_label: '地點備註',        sort_order_list: 18, sort_order_detail: 18 },
   { column_name: '其他備註',        field_name: '其他備註',        display_label: '其他備註',        sort_order_list: 19, sort_order_detail: 19 },
   { column_name: '其他出處來源',     field_name: '其他出處來源',     display_label: '其他出處來源',     sort_order_list: 20, sort_order_detail: 20 },
 ];

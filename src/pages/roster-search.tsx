@@ -43,8 +43,8 @@ const fieldGroups = {
   任期時間: [
     { value: 'startDate', label: '起始日期' },
     { value: 'endDate', label: '結束日期' },
-    { value: 'startDateSource', label: '起始日期來源／原因' },
-    { value: 'endDateSource', label: '結束日期來源／原因' },
+    { value: 'startDateSource', label: '任用依據' },
+    { value: 'endDateSource', label: '離職依據' },
   ],
   任用與異動: [
     { value: 'appointmentMethod', label: '產生方式' },
@@ -54,7 +54,7 @@ const fieldGroups = {
     { value: 'transferPosition', label: '調／升任單位職稱' },
   ],
   其他: [
-    { value: 'meetingLocation', label: '地點' },
+    { value: 'meetingLocation', label: '地點備註' },
     { value: 'notes', label: '其他備註' },
     { value: 'otherSources', label: '其他出處來源' },
   ],
@@ -77,8 +77,8 @@ const filterFieldGroups = {
     { value: '屆次', label: '屆次' },
   ],
   任期時間: [
-    { value: '起始日期來源_原因', label: '起始日期來源／原因' },
-    { value: '結束日期來源_原因', label: '結束日期來源／原因' },
+    { value: '任用依據', label: '任用依據' },
+    { value: '離職依據', label: '離職依據' },
   ],
   任用與異動: [
     { value: '產生方式', label: '產生方式' },
@@ -88,7 +88,7 @@ const filterFieldGroups = {
     { value: '調_升任單位職稱', label: '調／升任單位職稱' },
   ],
   其他: [
-    { value: '地點', label: '地點' },
+    { value: '地點備註', label: '地點備註' },
     { value: '其他備註', label: '其他備註' },
     { value: '其他出處來源', label: '其他出處來源' },
   ],

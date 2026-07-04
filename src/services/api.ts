@@ -174,7 +174,7 @@ export async function getIntroductions(): Promise<Introduction[]> {
 
 export interface ColumnConfig {
   column_name: string;   // DB 物理欄位名（KmttblColumnDisplay.column_name）
-  field_name: string;    // Django ORM 欄位名 = API JSON key（如 '起始日期來源_原因'）
+  field_name: string;    // Django ORM 欄位名 = API JSON key（如 '任用依據'）
   display_label: string; // 前端顯示標籤
   sort_order_list: number;
   sort_order_detail: number;
