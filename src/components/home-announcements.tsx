@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Megaphone, Pin, ChevronRight } from 'lucide-react';
+import { Pin, ChevronRight } from 'lucide-react';
 import { getAnnouncements, HOME_ANNOUNCEMENT_LIMIT, type Announcement } from '@/services/announcements';
 
 /** 首頁「最新消息」公告區塊：置頂優先、日期新→舊，最多顯示 HOME_ANNOUNCEMENT_LIMIT 則 */
@@ -18,29 +18,24 @@ export function HomeAnnouncements() {
   const shown = items?.slice(0, HOME_ANNOUNCEMENT_LIMIT) ?? [];
   const hasMore = (items?.length ?? 0) > HOME_ANNOUNCEMENT_LIMIT;
 
-  return (
-    <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
-      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h2 className="text-2xl sm:text-3xl ink-text section-title flex items-center gap-2">
-          <Megaphone className="w-6 h-6 text-[#d4af37] flex-shrink-0" />
-          最新消息
-        </h2>
-        {hasMore && (
-          <Link to="/announcements"
-            className="text-sm text-gray-500 hover:text-[#16a085] transition-colors flex items-center gap-0.5 flex-shrink-0">
-            更多內容 <ChevronRight className="w-4 h-4" />
-          </Link>
-        )}
-      </div>
+  // 沒有公告（或載入中／載入失敗）時，整個區塊與分隔線都不顯示
+  if (shown.length === 0) return null;
 
-      {items === null ? (
-        <p className="py-8 text-center text-sm text-gray-400">載入中…</p>
-      ) : shown.length === 0 ? (
-        <div className="py-10 text-center text-gray-400">
-          <Megaphone className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-          <p className="text-sm">目前沒有公告</p>
+  return (
+    <>
+      <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner">
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <h2 className="text-2xl sm:text-3xl ink-text section-title">
+            最新消息
+          </h2>
+          {hasMore && (
+            <Link to="/announcements"
+              className="text-sm text-gray-500 hover:text-[#16a085] transition-colors flex items-center gap-0.5 flex-shrink-0">
+              更多內容 <ChevronRight className="w-4 h-4" />
+            </Link>
+          )}
         </div>
-      ) : (
+
         <ul className="divide-y divide-gray-100">
           {shown.map((a) => (
             <li key={a.id}>
@@ -63,7 +58,10 @@ export function HomeAnnouncements() {
             </li>
           ))}
         </ul>
-      )}
-    </div>
+      </div>
+
+      {/* 自帶分隔線（與下方「關於本檢索系統」區隔；無公告時整個區塊不顯示，分隔線也不會出現）*/}
+      <div className="cloud-divider my-6 sm:my-12"></div>
+    </>
   );
 }

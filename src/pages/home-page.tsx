@@ -37,7 +37,7 @@ export function HomePage() {
 
       {/* About Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        {/* 最新消息／公告區塊 */}
+        {/* 最新消息／公告區塊（有公告才顯示，含自帶分隔線；置於「關於本檢索系統」之上）*/}
         <HomeAnnouncements />
 
         <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
