@@ -116,6 +116,43 @@ const DEFAULT_LIST_COLUMNS: ColumnConfig[] = [
   { column_name: '屆次',    field_name: '屆次',    display_label: '屆次',    sort_order_list: 6, sort_order_detail: 6 },
 ];
 
+interface RelevanceTerm { value: string; fields: string[] }
+
+/**
+ * 關聯性排序：把後端回傳結果依「命中查詢詞數」重排（多者在前，同分維持 id 序）。
+ * 兩個純函式配套：buildRelevanceTerms 在搜尋時把送後端的查詢陣列組成 terms（排除 NOT），
+ * sortByRelevance 在渲染時用 terms 對結果算分排序。
+ */
+function buildRelevanceTerms(
+  queryFields: string[], searchValues: string[], searchOperators: string[],
+): RelevanceTerm[] {
+  // 對齊 search/services.py 的「全欄位」比對範圍（值為 record 的 JSON key）
+  const ALL_FIELDS = [
+    '姓名', '別名', '組織', '一級單位', '二級單位', '三級單位', '職位', '屆次',
+    '任用依據', '離職依據', '前任姓名', '後任姓名', '產生方式', '序位',
+    '兼_代', '離職原因', '調_升任單位職稱', '其他備註', '地點備註', '其他出處來源',
+  ];
+  const fieldsOf = (f: string) =>
+    f === '全欄位' ? ALL_FIELDS : f === '姓名_別名' ? ['姓名', '別名'] : [f];
+  return queryFields
+    .map((f, i) => ({ f, v: searchValues[i], op: searchOperators[i] }))
+    .filter(t => t.op !== 'not' && t.v)          // NOT 為排除、空值略過
+    .map(t => ({ value: t.v, fields: fieldsOf(t.f) }));
+}
+
+function sortByRelevance(
+  results: Record<string, any>[], terms: RelevanceTerm[],
+): Record<string, any>[] {
+  if (terms.length < 2) return results;          // 單一詞全部同分，維持後端 id 序
+  const score = (r: Record<string, any>) =>
+    terms.reduce((n, t) =>
+      n + (t.fields.some(f => r[f] != null && String(r[f]).includes(t.value)) ? 1 : 0), 0);
+  return results
+    .map((r, i) => ({ r, i, s: score(r) }))
+    .sort((a, b) => (b.s - a.s) || (a.i - b.i))   // 命中多者在前，同分維持原順序
+    .map(x => x.r);
+}
+
 function loadStoredState(): any {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -238,25 +275,28 @@ export function RosterSearch() {
   const [sortColumn, setSortColumn] = useState<string | null>(stored?.sortColumn ?? null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(stored?.sortDirection ?? 'asc');
 
+  // 關聯性排序依據：所有非 NOT 的查詢詞（快速＋進階），供預設排序算分
+  const [relevanceTerms, setRelevanceTerms] = useState<RelevanceTerm[]>(stored?.relevanceTerms ?? []);
+
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery,
         timeStartYear, timeEndYear, advancedConditions,
         filterConditions, allResults, totalCount, currentPage, hasSearched,
-        sortColumn, sortDirection,
+        sortColumn, sortDirection, relevanceTerms,
       }));
     } catch {}
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear,
       timeEndYear, advancedConditions, filterConditions, allResults,
-      totalCount, currentPage, hasSearched, sortColumn, sortDirection]);
+      totalCount, currentPage, hasSearched, sortColumn, sortDirection, relevanceTerms]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // 全部結果排序（空值永遠排在最後；兩值皆為數字時做數值比較，否則用繁中 locale 比較）
   const sortedResults = useMemo(() => {
-    if (!sortColumn) return allResults;
+    if (!sortColumn) return sortByRelevance(allResults, relevanceTerms);  // 預設：關聯性排序
     const dir = sortDirection === 'asc' ? 1 : -1;
     const norm = (v: any) => (v == null ? '' : String(v).trim());
     return [...allResults].sort((ra, rb) => {
@@ -270,7 +310,7 @@ export function RosterSearch() {
       if (!Number.isNaN(an) && !Number.isNaN(bn)) return dir * (an - bn);
       return dir * av.localeCompare(bv, 'zh-Hant');
     });
-  }, [allResults, sortColumn, sortDirection]);
+  }, [allResults, sortColumn, sortDirection, relevanceTerms]);
 
   // 前端分頁：取排序後當前頁的 50 筆
   const pagedResults = useMemo(
@@ -400,6 +440,9 @@ export function RosterSearch() {
     const hasTextSearch = queryFields.length > 0;
     const hasDateSearch = allDateSlots.length > 0;
 
+    // 關聯性排序依據：所有非 NOT 的查詢詞（AND 詞對每筆同加分不影響順序，NOT 為排除不計）
+    const relTerms = buildRelevanceTerms(queryFields, searchValues, searchOperators);
+
     // 組裝篩選條件（有值／為空）
     const activeFilterConditions = filterConditions.filter(c => c.field);
     const hasFilterSearch = activeFilterConditions.length > 0;
@@ -454,6 +497,7 @@ export function RosterSearch() {
       setCurrentPage(1);
       setSortColumn(null);
       setSortDirection('asc');
+      setRelevanceTerms(relTerms);
       setHasSearched(true);
     } catch (err: any) {
       setError(err.message || '搜尋失敗');
@@ -494,6 +538,7 @@ export function RosterSearch() {
     setHasSearched(false);
     setSortColumn(null);
     setSortDirection('asc');
+    setRelevanceTerms([]);
     setError('');
     try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
   };
