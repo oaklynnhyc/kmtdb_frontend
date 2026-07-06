@@ -1,5 +1,6 @@
 import { BookOpen, Users, Archive, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { HomeAnnouncements } from "@/components/home-announcements";
 
 export function HomePage() {
   return (
@@ -36,6 +37,9 @@ export function HomePage() {
 
       {/* About Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        {/* 最新消息／公告區塊 */}
+        <HomeAnnouncements />
+
         <div className="paper-card rounded-lg p-5 sm:p-8 seal-corner mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl mb-4 sm:mb-6 ink-text section-title">
             關於本檢索系統

@@ -10,6 +10,8 @@ import { OrganizationalHistory } from '@/pages/organizational-history';
 import { EditorialNotes } from '@/pages/editorial-notes';
 import { RecordDetail } from '@/pages/record-detail';
 import { ChatBot } from '@/pages/chat-bot';
+import { AnnouncementsList } from '@/pages/announcements-list';
+import { AnnouncementDetail } from '@/pages/announcement-detail';
 
 function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -68,6 +70,8 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/history" element={<OrganizationalHistory />} />
               <Route path="/editorial" element={<EditorialNotes />} />
+              <Route path="/announcements" element={<AnnouncementsList />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetail />} />
               <Route path="/registry" element={<RosterSearch />} />
               <Route path="/roster/:id" element={<RosterDetail />} />
               <Route path="/record/:id" element={<RecordDetail />} />
