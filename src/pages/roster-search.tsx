@@ -168,11 +168,13 @@ function TermCombobox({
   onChange,
   onSearch,
   onSelect,
+  placeholder = '可選擇或輸入屆次，例如：第1屆、1',
 }: {
   value: string;
   onChange: (v: string) => void;
   onSearch: () => void;
   onSelect?: (v: string) => void;  // 從清單選取時觸發（直接查詢）
+  placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -191,7 +193,7 @@ function TermCombobox({
   return (
     <div ref={ref} className="relative">
       <Input
-        placeholder="可選擇或輸入屆次，例如：第1屆、1"
+        placeholder={placeholder}
         value={value}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
@@ -269,6 +271,8 @@ export function RosterSearch() {
   const [currentPage, setCurrentPage] = useState<number>(stored?.currentPage ?? 1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState<boolean>(stored?.hasSearched ?? false);
+  // 當前顯示結果所使用的查詢模式（快速／進階），用於摘要標記
+  const [searchedMode, setSearchedMode] = useState<'quick' | 'advanced' | null>(stored?.searchedMode ?? null);
   const [error, setError] = useState('');
 
   // 排序狀態（前端排序，套用於全部結果）
@@ -284,12 +288,12 @@ export function RosterSearch() {
         quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery,
         timeStartYear, timeEndYear, advancedConditions,
         filterConditions, allResults, totalCount, currentPage, hasSearched,
-        sortColumn, sortDirection, relevanceTerms,
+        searchedMode, sortColumn, sortDirection, relevanceTerms,
       }));
     } catch {}
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear,
       timeEndYear, advancedConditions, filterConditions, allResults,
-      totalCount, currentPage, hasSearched, sortColumn, sortDirection, relevanceTerms]);
+      totalCount, currentPage, hasSearched, searchedMode, sortColumn, sortDirection, relevanceTerms]);
 
   const pageSize = 50;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -378,7 +382,9 @@ export function RosterSearch() {
     );
   };
 
-  const performSearch = useCallback(async () => {
+  // mode 決定資料來源：'quick' 只用快速查詢分頁條件；'advanced' 只用進階條件＋篩選。
+  // 兩模式完全獨立，不互相帶入對方欄位的值。
+  const performSearch = useCallback(async (mode: 'quick' | 'advanced') => {
     const queryFields: string[] = [];
     const searchValues: string[] = [];
     const searchOperators: string[] = [];
@@ -399,43 +405,42 @@ export function RosterSearch() {
       });
     };
 
-    // 快速搜尋（文字）
-    if (quickSearchTab === 'all' && allFieldsQuery.trim()) {
-      pushExpanded('全欄位', allFieldsQuery, 'and');
-    } else if (quickSearchTab === 'person' && nameQuery.trim()) {
-      pushExpanded('姓名_別名', nameQuery, 'and');
-    } else if (quickSearchTab === 'position' && positionQuery.trim()) {
-      pushExpanded('職位', positionQuery, 'and');
-    } else if (quickSearchTab === 'term' && termQuery.trim()) {
-      pushExpanded('屆次', termQuery, 'and');
-    }
-
-    // 進階搜尋：startDate/endDate 走日期路徑，其餘走文字路徑
     type DateSlot = { sY: string; sM: string; sD: string; eY: string; eM: string; eD: string; op: string };
-    const advDateSlots: DateSlot[] = [];
-
-    advancedConditions.forEach(c => {
-      if ((c.field === 'startDate' || c.field === 'endDate') && c.value.trim()) {
-        const d = parseDate(c.value);
-        const isStart = c.field === 'startDate';
-        advDateSlots.push({
-          sY: isStart ? d.year  : '', sM: isStart ? d.month : '', sD: isStart ? d.day : '',
-          eY: isStart ? ''      : d.year,  eM: isStart ? ''      : d.month, eD: isStart ? '' : d.day,
-          op: toDjangoOperator(c.logicOperator),
-        });
-      } else if (c.value.trim()) {
-        pushExpanded(toDjangoSearchField(c.field), c.value, toDjangoOperator(c.logicOperator));
-      }
-    });
-
-    // 快速搜尋時間 tab + 進階搜尋日期條件合併
     const allDateSlots: DateSlot[] = [];
-    if (quickSearchTab === 'time' && (timeStartYear || timeEndYear)) {
-      const s = parseDate(timeStartYear);
-      const e = parseDate(timeEndYear);
-      allDateSlots.push({ sY: s.year, sM: s.month, sD: s.day, eY: e.year, eM: e.month, eD: e.day, op: 'and' });
+    let activeFilterConditions: FilterCondition[] = [];
+
+    if (mode === 'quick') {
+      // 快速查詢：僅使用當前分頁的條件
+      if (quickSearchTab === 'all' && allFieldsQuery.trim()) {
+        pushExpanded('全欄位', allFieldsQuery, 'and');
+      } else if (quickSearchTab === 'person' && nameQuery.trim()) {
+        pushExpanded('姓名_別名', nameQuery, 'and');
+      } else if (quickSearchTab === 'position' && positionQuery.trim()) {
+        pushExpanded('職位', positionQuery, 'and');
+      } else if (quickSearchTab === 'term' && termQuery.trim()) {
+        pushExpanded('屆次', termQuery, 'and');
+      } else if (quickSearchTab === 'time' && (timeStartYear || timeEndYear)) {
+        const s = parseDate(timeStartYear);
+        const e = parseDate(timeEndYear);
+        allDateSlots.push({ sY: s.year, sM: s.month, sD: s.day, eY: e.year, eM: e.month, eD: e.day, op: 'and' });
+      }
+    } else {
+      // 進階查詢：僅使用進階查詢條件與篩選條件（startDate/endDate 走日期路徑，其餘走文字路徑）
+      advancedConditions.forEach(c => {
+        if ((c.field === 'startDate' || c.field === 'endDate') && c.value.trim()) {
+          const d = parseDate(c.value);
+          const isStart = c.field === 'startDate';
+          allDateSlots.push({
+            sY: isStart ? d.year  : '', sM: isStart ? d.month : '', sD: isStart ? d.day : '',
+            eY: isStart ? ''      : d.year,  eM: isStart ? ''      : d.month, eD: isStart ? '' : d.day,
+            op: toDjangoOperator(c.logicOperator),
+          });
+        } else if (c.value.trim()) {
+          pushExpanded(toDjangoSearchField(c.field), c.value, toDjangoOperator(c.logicOperator));
+        }
+      });
+      activeFilterConditions = filterConditions.filter(c => c.field);
     }
-    allDateSlots.push(...advDateSlots);
 
     const hasTextSearch = queryFields.length > 0;
     const hasDateSearch = allDateSlots.length > 0;
@@ -443,8 +448,6 @@ export function RosterSearch() {
     // 關聯性排序依據：所有非 NOT 的查詢詞（AND 詞對每筆同加分不影響順序，NOT 為排除不計）
     const relTerms = buildRelevanceTerms(queryFields, searchValues, searchOperators);
 
-    // 組裝篩選條件（有值／為空）
-    const activeFilterConditions = filterConditions.filter(c => c.field);
     const hasFilterSearch = activeFilterConditions.length > 0;
 
     if (!hasTextSearch && !hasDateSearch && !hasFilterSearch) {
@@ -499,6 +502,7 @@ export function RosterSearch() {
       setSortDirection('asc');
       setRelevanceTerms(relTerms);
       setHasSearched(true);
+      setSearchedMode(mode);
     } catch (err: any) {
       setError(err.message || '搜尋失敗');
       setAllResults([]);
@@ -508,15 +512,22 @@ export function RosterSearch() {
     }
   }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
 
-  const handleSearch = () => performSearch();
+  const handleQuickSearch = () => performSearch('quick');
+  const handleAdvancedSearch = () => performSearch('advanced');
+  const onQuickKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleQuickSearch();
+  };
+  const onAdvancedKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAdvancedSearch();
+  };
 
-  // 屆次瀏覽：從清單選取後直接查詢。用 ref 保存最新 performSearch，
+  // 屆次瀏覽：從清單選取後直接查詢（快速查詢模式）。用 ref 保存最新 performSearch，
   // 待 termQuery 狀態更新後的下一個 render 再觸發（避免讀到舊值）。
   const performSearchRef = useRef(performSearch);
   performSearchRef.current = performSearch;
   const [autoSearchTick, setAutoSearchTick] = useState(0);
   useEffect(() => {
-    if (autoSearchTick > 0) performSearchRef.current();
+    if (autoSearchTick > 0) performSearchRef.current('quick');
   }, [autoSearchTick]);
 
   // 清空所有檢索條件與查詢結果（並清掉 sessionStorage 暫存）
@@ -536,6 +547,7 @@ export function RosterSearch() {
     setTotalCount(0);
     setCurrentPage(1);
     setHasSearched(false);
+    setSearchedMode(null);
     setSortColumn(null);
     setSortDirection('asc');
     setRelevanceTerms([]);
@@ -543,11 +555,9 @@ export function RosterSearch() {
     try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleSearch();
-  };
 
-  const activeFilters = useMemo(() => {
+  // 快速查詢條件摘要
+  const quickFilters = useMemo(() => {
     const filters: string[] = [];
     if (quickSearchTab === 'all' && allFieldsQuery) filters.push(`全欄位：${allFieldsQuery}`);
     if (quickSearchTab === 'person' && nameQuery) filters.push(`人物姓名：${nameQuery}`);
@@ -556,6 +566,12 @@ export function RosterSearch() {
     if (quickSearchTab === 'time' && (timeStartYear || timeEndYear)) {
       filters.push(`任職時間：${timeStartYear || '不限'}–${timeEndYear || '不限'}`);
     }
+    return filters;
+  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear, timeEndYear]);
+
+  // 進階查詢條件摘要（含篩選）
+  const advancedFilters = useMemo(() => {
+    const filters: string[] = [];
     advancedConditions.forEach((c, index) => {
       if (c.value) {
         const field = Object.values(fieldGroups).flat().find(f => f.value === c.field);
@@ -571,7 +587,7 @@ export function RosterSearch() {
       filters.push(`${prefix}${fieldLabel}：${statusLabel}`);
     });
     return filters;
-  }, [quickSearchTab, allFieldsQuery, nameQuery, positionQuery, termQuery, timeStartYear, timeEndYear, advancedConditions, filterConditions]);
+  }, [advancedConditions, filterConditions]);
 
   return (
     <div className="min-h-screen">
@@ -624,7 +640,7 @@ export function RosterSearch() {
                   '【搜尋欄範例】孫中山 興中會 文化工作會 第7屆',
                 ]} />
                 <Input placeholder="孫中山 興中會 文化工作會 第7屆" value={allFieldsQuery}
-                  onChange={e => setAllFieldsQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                  onChange={e => setAllFieldsQuery(e.target.value)} onKeyDown={onQuickKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="person" className="mt-4">
                 <QuickHint items={[
@@ -632,7 +648,7 @@ export function RosterSearch() {
                   '【搜尋欄範例】胡漢民 陳辭修 吳稚暉',
                 ]} />
                 <Input placeholder="胡漢民 陳辭修 吳稚暉" value={nameQuery}
-                  onChange={e => setNameQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                  onChange={e => setNameQuery(e.target.value)} onKeyDown={onQuickKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="term" className="mt-4">
                 <QuickHint items={[
@@ -641,7 +657,7 @@ export function RosterSearch() {
                 <TermCombobox
                   value={termQuery}
                   onChange={setTermQuery}
-                  onSearch={handleSearch}
+                  onSearch={handleQuickSearch}
                   onSelect={() => setAutoSearchTick(t => t + 1)}
                 />
               </TabsContent>
@@ -651,7 +667,7 @@ export function RosterSearch() {
                   '【搜尋欄範例】中央委員 中常委 主任委員',
                 ]} />
                 <Input placeholder="中央委員 中常委 主任委員" value={positionQuery}
-                  onChange={e => setPositionQuery(e.target.value)} onKeyDown={handleKeyDown} className="paper-input" />
+                  onChange={e => setPositionQuery(e.target.value)} onKeyDown={onQuickKeyDown} className="paper-input" />
               </TabsContent>
               <TabsContent value="time" className="mt-4">
                 <QuickHint items={[
@@ -663,20 +679,20 @@ export function RosterSearch() {
                   <div>
                     <label className="block text-sm ink-text mb-2 font-medium">起始日期</label>
                     <DateInput value={timeStartYear}
-                      onChange={setTimeStartYear} onKeyDown={handleKeyDown} className="paper-input" />
+                      onChange={setTimeStartYear} onKeyDown={onQuickKeyDown} className="paper-input" />
                   </div>
                   <div>
                     <label className="block text-sm ink-text mb-2 font-medium">結束日期</label>
                     <DateInput value={timeEndYear}
-                      onChange={setTimeEndYear} onKeyDown={handleKeyDown} className="paper-input" />
+                      onChange={setTimeEndYear} onKeyDown={onQuickKeyDown} className="paper-input" />
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* 搜尋按鈕 */}
+            {/* 快速查詢搜尋按鈕（僅用快速查詢條件）*/}
             <div className="mt-4 flex justify-stretch sm:justify-end">
-              <button onClick={handleSearch} disabled={isLoading}
+              <button onClick={handleQuickSearch} disabled={isLoading}
                 className="ink-button w-full sm:w-auto px-6 sm:px-8 py-2 rounded flex items-center justify-center space-x-2 disabled:opacity-50">
                 <SearchIcon className="w-4 h-4" />
                 <span>{isLoading ? '搜尋中...' : '搜尋'}</span>
@@ -733,12 +749,21 @@ export function RosterSearch() {
                       <div className="w-full md:flex-1">
                         <DateInput value={condition.value}
                           onChange={v => updateCondition(condition.id, { value: v })}
-                          onKeyDown={handleKeyDown} className="border-neutral-300" />
+                          onKeyDown={onAdvancedKeyDown} className="border-neutral-300" />
+                      </div>
+                    ) : condition.field === 'term' ? (
+                      <div className="w-full md:flex-1">
+                        <TermCombobox
+                          value={condition.value}
+                          onChange={v => updateCondition(condition.id, { value: v })}
+                          onSearch={handleAdvancedSearch}
+                          placeholder="輸入查詢內容"
+                        />
                       </div>
                     ) : (
                       <Input placeholder="輸入查詢內容" value={condition.value}
                         onChange={e => updateCondition(condition.id, { value: e.target.value })}
-                        onKeyDown={handleKeyDown} className="w-full md:flex-1 border-neutral-300" />
+                        onKeyDown={onAdvancedKeyDown} className="w-full md:flex-1 border-neutral-300" />
                     )}
 
                     <Button variant="ghost" size="sm" onClick={() => removeCondition(condition.id)}
@@ -766,7 +791,9 @@ export function RosterSearch() {
                     <p className="text-xs text-neutral-500 font-medium tracking-wide">欄位資料篩選</p>
                     {filterConditions.map((condition, index) => (
                       <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
-                        {index > 0 ? (
+                        {/* 整個進階區塊（查詢條件＋篩選）視為一個整體：只有最前面的項目沒有 AND/OR/NOT。
+                            若前面已有查詢條件（advancedConditions 非空），第一個篩選條件也要顯示運算子。 */}
+                        {(index > 0 || advancedConditions.length > 0) ? (
                           <Select value={condition.logicOperator}
                             onValueChange={value => updateFilterCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
                             <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
@@ -811,9 +838,9 @@ export function RosterSearch() {
                   </>
                 )}
 
-                {/* 進階查詢搜尋按鈕 */}
+                {/* 進階查詢搜尋按鈕（僅用進階查詢條件與篩選）*/}
                 <div className="pt-2 flex justify-stretch sm:justify-end">
-                  <button onClick={handleSearch} disabled={isLoading}
+                  <button onClick={handleAdvancedSearch} disabled={isLoading}
                     className="ink-button w-full sm:w-auto px-6 sm:px-8 py-2 rounded flex items-center justify-center space-x-2 disabled:opacity-50">
                     <SearchIcon className="w-4 h-4" />
                     <span>{isLoading ? '搜尋中...' : '搜尋'}</span>
@@ -823,11 +850,30 @@ export function RosterSearch() {
             </CardContent>
         </div>
 
-        {/* Query Summary */}
-        {activeFilters.length > 0 && (
+        {/* Query Summary：分開列出快速／進階，並標記當前結果所用模式 */}
+        {(quickFilters.length > 0 || advancedFilters.length > 0 || searchedMode) && (
           <div className="mb-4 p-4 query-ink-box rounded text-sm">
             <div className="font-medium ink-text mb-2">查詢條件摘要：</div>
-            <div className="ink-text">{activeFilters.join(' ')}</div>
+            <div className="space-y-2">
+              {([
+                { key: 'quick', label: '快速查詢', filters: quickFilters },
+                { key: 'advanced', label: '進階查詢', filters: advancedFilters },
+              ] as const).map(row => {
+                const isActive = searchedMode === row.key;
+                return (
+                  <div key={row.key} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
+                    <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                      isActive ? 'bg-[#16a085]/10 text-[#16a085] ring-1 ring-[#16a085]/30' : 'bg-neutral-100 text-neutral-500'
+                    }`}>
+                      {row.label}{isActive && ' · 目前結果'}
+                    </span>
+                    <span className={isActive ? 'ink-text' : 'text-neutral-400'}>
+                      {row.filters.length ? row.filters.join(' ') : '（未設定）'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -934,7 +980,7 @@ export function RosterSearch() {
           <div className="paper-card rounded-lg p-6 sm:p-12 text-center">
             <button
               type="button"
-              onClick={handleSearch}
+              onClick={handleQuickSearch}
               disabled={isLoading}
               aria-label="搜尋"
               className="block mx-auto mb-4 text-gray-300 hover:text-[#16a085] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
