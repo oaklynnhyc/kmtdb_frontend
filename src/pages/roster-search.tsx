@@ -409,8 +409,8 @@ export function RosterSearch() {
     const allDateSlots: DateSlot[] = [];
     let activeFilterConditions: FilterCondition[] = [];
 
-    if (mode === 'quick') {
-      // 快速查詢：僅使用當前分頁的條件
+    // 快速查詢條件（兩種模式都會用到；進階模式以此為基礎範圍再疊加進階條件 narrow down）
+    const buildQuick = () => {
       if (quickSearchTab === 'all' && allFieldsQuery.trim()) {
         pushExpanded('全欄位', allFieldsQuery, 'and');
       } else if (quickSearchTab === 'person' && nameQuery.trim()) {
@@ -424,8 +424,14 @@ export function RosterSearch() {
         const e = parseDate(timeEndYear);
         allDateSlots.push({ sY: s.year, sM: s.month, sD: s.day, eY: e.year, eM: e.month, eD: e.day, op: 'and' });
       }
+    };
+
+    if (mode === 'quick') {
+      // 快速查詢：只用快速查詢條件
+      buildQuick();
     } else {
-      // 進階查詢：僅使用進階查詢條件與篩選條件（startDate/endDate 走日期路徑，其餘走文字路徑）
+      // 進階查詢：先帶入快速查詢條件作為基礎範圍，再疊加進階查詢條件與篩選（startDate/endDate 走日期路徑）
+      buildQuick();
       advancedConditions.forEach(c => {
         if ((c.field === 'startDate' || c.field === 'endDate') && c.value.trim()) {
           const d = parseDate(c.value);
@@ -708,19 +714,18 @@ export function RosterSearch() {
           </CardHeader>
           <CardContent>
               <div className="space-y-4">
-                {advancedConditions.map((condition, index) => (
+                {advancedConditions.map((condition) => (
                   <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
-                    {index > 0 ? (
-                      <Select value={condition.logicOperator}
-                        onValueChange={value => updateCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
-                        <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="AND">且 (AND)</SelectItem>
-                          <SelectItem value="OR">或 (OR)</SelectItem>
-                          <SelectItem value="NOT">非 (NOT)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : <div className="hidden md:block md:w-32" />}
+                    {/* 進階模式會以快速查詢為基礎再疊加，故第一條也提供 AND/OR/NOT（與快速條件的組合方式）*/}
+                    <Select value={condition.logicOperator}
+                      onValueChange={value => updateCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
+                      <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AND">且 (AND)</SelectItem>
+                        <SelectItem value="OR">或 (OR)</SelectItem>
+                        <SelectItem value="NOT">非 (NOT)</SelectItem>
+                      </SelectContent>
+                    </Select>
 
                     <Select value={condition.field}
                       onValueChange={value => {
@@ -791,19 +796,16 @@ export function RosterSearch() {
                     <p className="text-xs text-neutral-500 font-medium tracking-wide">欄位資料篩選</p>
                     {filterConditions.map((condition, index) => (
                       <div key={condition.id} className="flex flex-col md:flex-row md:items-start gap-2 md:gap-3 pb-4 border-b border-neutral-200 last:border-0">
-                        {/* 整個進階區塊（查詢條件＋篩選）視為一個整體：只有最前面的項目沒有 AND/OR/NOT。
-                            若前面已有查詢條件（advancedConditions 非空），第一個篩選條件也要顯示運算子。 */}
-                        {(index > 0 || advancedConditions.length > 0) ? (
-                          <Select value={condition.logicOperator}
-                            onValueChange={value => updateFilterCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
-                            <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="AND">且 (AND)</SelectItem>
-                              <SelectItem value="OR">或 (OR)</SelectItem>
-                              <SelectItem value="NOT">非 (NOT)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : <div className="hidden md:block md:w-32" />}
+                        {/* 進階區塊以快速查詢為基礎再疊加，篩選條件皆提供 AND/OR/NOT */}
+                        <Select value={condition.logicOperator}
+                          onValueChange={value => updateFilterCondition(condition.id, { logicOperator: value as 'AND' | 'OR' | 'NOT' })}>
+                          <SelectTrigger className="w-full md:w-32 border-neutral-300"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AND">且 (AND)</SelectItem>
+                            <SelectItem value="OR">或 (OR)</SelectItem>
+                            <SelectItem value="NOT">非 (NOT)</SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         <Select value={condition.field}
                           onValueChange={value => updateFilterCondition(condition.id, { field: value })}>
@@ -850,29 +852,35 @@ export function RosterSearch() {
             </CardContent>
         </div>
 
-        {/* Query Summary：分開列出快速／進階，並標記當前結果所用模式 */}
+        {/* Query Summary：分開列出快速／進階；標記本次結果所用模式。
+            快速查詢＝只用快速條件；進階查詢＝以快速為基礎再疊加進階（兩者條件皆生效）。 */}
         {(quickFilters.length > 0 || advancedFilters.length > 0 || searchedMode) && (
           <div className="mb-4 p-4 query-ink-box rounded text-sm">
-            <div className="font-medium ink-text mb-2">查詢條件摘要：</div>
+            <div className="font-medium ink-text mb-2 flex flex-wrap items-center gap-2">
+              查詢條件摘要
+              {searchedMode && (
+                <span className="text-xs px-2 py-0.5 rounded bg-[#16a085]/10 text-[#16a085] ring-1 ring-[#16a085]/30 font-medium">
+                  本次結果：{searchedMode === 'advanced' ? '進階查詢（含快速查詢條件）' : '快速查詢'}
+                </span>
+              )}
+            </div>
             <div className="space-y-2">
               {([
-                { key: 'quick', label: '快速查詢', filters: quickFilters },
-                { key: 'advanced', label: '進階查詢', filters: advancedFilters },
-              ] as const).map(row => {
-                const isActive = searchedMode === row.key;
-                return (
-                  <div key={row.key} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
-                    <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                      isActive ? 'bg-[#16a085]/10 text-[#16a085] ring-1 ring-[#16a085]/30' : 'bg-neutral-100 text-neutral-500'
-                    }`}>
-                      {row.label}{isActive && ' · 目前結果'}
-                    </span>
-                    <span className={isActive ? 'ink-text' : 'text-neutral-400'}>
-                      {row.filters.length ? row.filters.join(' ') : '（未設定）'}
-                    </span>
-                  </div>
-                );
-              })}
+                // 快速條件在兩種模式都生效；進階條件只有進階模式生效
+                { key: 'quick', label: '快速查詢', filters: quickFilters, active: searchedMode !== null },
+                { key: 'advanced', label: '進階查詢', filters: advancedFilters, active: searchedMode === 'advanced' },
+              ] as const).map(row => (
+                <div key={row.key} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
+                  <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                    row.active ? 'bg-[#16a085]/10 text-[#16a085] ring-1 ring-[#16a085]/30' : 'bg-neutral-100 text-neutral-500'
+                  }`}>
+                    {row.label}{row.active && ' · 已套用'}
+                  </span>
+                  <span className={row.active ? 'ink-text' : 'text-neutral-400'}>
+                    {row.filters.length ? row.filters.join(' ') : '（未設定）'}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
