@@ -170,6 +170,33 @@ export async function getIntroductions(): Promise<Introduction[]> {
   return response.json();
 }
 
+// ========== 凡例 API ==========
+
+export interface EditorialContentEntry {
+  id: number;
+  order: number;
+  content: string;
+}
+
+export interface FieldNoteEntry {
+  id: number;
+  order: number;
+  field: string;  // 欄位
+  note: string;   // 說明
+}
+
+export async function getEditorialContent(): Promise<EditorialContentEntry[]> {
+  const response = await fetch(`${BASE}/api/editorial-content/`, { credentials: 'include' });
+  if (!response.ok) throw new Error(`API Error ${response.status}`);
+  return response.json();
+}
+
+export async function getFieldNotes(): Promise<FieldNoteEntry[]> {
+  const response = await fetch(`${BASE}/api/field-notes/`, { credentials: 'include' });
+  if (!response.ok) throw new Error(`API Error ${response.status}`);
+  return response.json();
+}
+
 // ========== 欄位顯示設定 API ==========
 
 export interface ColumnConfig {
