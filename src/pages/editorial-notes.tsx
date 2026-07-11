@@ -1,6 +1,20 @@
+import { useEffect, useState } from 'react';
 import { BookOpen, Info, ScrollText } from 'lucide-react';
+import { getEditorialContent, getFieldNotes, type FieldNoteEntry } from '@/services/api';
 
 export function EditorialNotes() {
+  const [editorialContent, setEditorialContent] = useState('');
+  const [fieldNotes, setFieldNotes] = useState<FieldNoteEntry[]>([]);
+
+  useEffect(() => {
+    getEditorialContent()
+      .then((rows) => setEditorialContent(rows.map((r) => r.content).join('\n\n')))
+      .catch(() => setEditorialContent(''));
+    getFieldNotes()
+      .then(setFieldNotes)
+      .catch(() => setFieldNotes([]));
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -73,46 +87,9 @@ export function EditorialNotes() {
                   國立政治大學圖書館中國國民黨職名錄檢索系統凡例
                 </h2>
               </div>
-              <ol className="list-none space-y-5 text-gray-700 leading-relaxed pl-4">
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">一、</span>
-                  本系統以1994年劉維開教授編著，中國國民黨黨史會出版之《中國國民黨職名錄》為底本，就各時期中央組織單位之職名進行結構性條目編製與建檔，並參照2014年北京中華書局出版之《中国国民党职名录(1894-1994)》進行校對增補。
-                </li>
-                <li className="relative pl-8">
-                  <span className="absolute left-0 top-0 ink-text font-medium">二、</span>
-                  本系統考量檢索欄位整合通用性及檢索精確度，調整著錄規則如下：
-                  <ol className="list-none space-y-3 mt-3">
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（一）</span>
-                      日期欄位著錄改用西元紀年。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（二）</span>
-                      人名以原書照錄為原則，明顯誤植者逕行修正，其餘照錄。然為避免系統顯示亂碼，異體字改為通用字。例如：「羣」改用「群」，「啓」改用「啟」，「峯」改用「峰」。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（三）</span>
-                      本系統參照國家圖書館「NBINet人名權威查詢系統」，新增別名欄位，建置人名權威檔，俾使本名與別名均可查檢。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（四）</span>
-                      姓名相同者參照國史館檔案史料文物查詢系統及本館中國國民黨黨史檔案探索系統比對任職時間及身分，予以生卒年標示，以示區隔。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（五）</span>
-                      三民主義青年團於1947年9月黨團合併後，登載姓名不一致者，依大溪檔案收錄「三民主義青年團第二屆中央幹事中央監察暨候補幹事候補監察簡歷冊」（檔號：大黨043/014）登載為準。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（六）</span>
-                      中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員等以選舉方式產生者，依原書順序標示序位。
-                    </li>
-                    <li className="relative pl-10">
-                      <span className="absolute left-0 top-0 ink-text">（七）</span>
-                      在職期間亡故者，若原書未註記亡故日期，以報紙新聞發布所載日期為準，並於「其他出處來源」欄位註記。
-                    </li>
-                  </ol>
-                </li>
-              </ol>
+              <div className="whitespace-pre-wrap leading-relaxed text-gray-700 pl-4">
+                {editorialContent}
+              </div>
             </section>
 
             <div className="cloud-divider"></div>
@@ -138,138 +115,12 @@ export function EditorialNotes() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">組織</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        甲編各時期組織名稱。乙編之中國國民黨。例如：興中會、中國國民黨
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">一級單位</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        甲編本部一級單位。乙編第一至六屆中央執行、監察委員會，第七至十四屆中央委員會，改造後之中央評議委員，三民主義青年團與中央改造委員會亦列入一級單位。例如：幹事部、上海中央執行委員會、中央委員會
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">二級單位</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        一級單位下轄之直屬單位。例如：文化工作會、工人部
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">三級單位</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        二級單位下轄之直屬單位。例如：調查統計局、中央訓練團
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">職位</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        職銜。例如：中央委員、主任委員
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">姓名</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        以原書照錄為原則，異體字及明顯誤植者逕行修正。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">別名</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依國家圖書館「NBINet人名權威查詢系統」增補。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">屆次</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。中央改造委員會、三民主義青年團獨立列出。例如：中國國民黨（改組前）、中國國民黨第7屆
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">起始日期</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        日期改以西元紀年。有明確起始日期者，以該日期為起始日期。選舉產生者，以選出日期為起始日期。中央常務委員以當次中央委員會全體會議開會第一天為起始日期，如無第一次者，以該屆全國代表大會開會第一天為起始日期。例如：1894-11-24
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">任用依據</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。例如：中常會第108次會議、中監會第3次會議
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">產生方式</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。例如：通過、選舉
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">結束日期</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        日期改以西元紀年。有明確離職日期者，以該日期為結束日期。中央執行委員、候補中央執行委員、中央監察委員、候補中央監察委員、中央評議委員、中央委員、候補中央委員等由全國代表大會選舉產生者，以下屆全國代表大會開會前一天為結束日期。中央常務委員以下次中央委員會全體會議開會前一天為結束日期，如無下次者，以下屆全國代表大會開會前一天為結束日期。例如：1925-12-31
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">離職依據</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。例如：中常會第56次會議、中監會第8次常會
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">離職原因</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。在職期間亡故者，若原書未註記，以報紙新聞發布為準，並於「其他出處來源」欄位註記。例如：另有任用、任期結束
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">前任姓名</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">後任姓名</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">兼／代</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。例如：兼任、暫行代理
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">調／升任單位職稱</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        依原書著錄。例如：內政部政務次長、中華日報董事長
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">其他備註</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        其他補充說明。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">地點備註</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        組織／單位所在城市，依原書著錄。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">其他出處來源</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        其他引用文獻。
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">序位</td>
-                      <td className="px-4 py-3 text-gray-700 leading-relaxed">
-                        由選舉產生者，依原書順序標示序位，遞補者接續標示。
-                      </td>
-                    </tr>
+                    {fieldNotes.map((n) => (
+                      <tr key={n.id}>
+                        <td className="px-4 py-3 font-medium ink-text align-top whitespace-nowrap">{n.field}</td>
+                        <td className="px-4 py-3 text-gray-700 leading-relaxed">{n.note}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
