@@ -57,6 +57,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           markdown: ['react-markdown', 'remark-gfm'],
+          react: ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
