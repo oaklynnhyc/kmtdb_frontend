@@ -225,6 +225,7 @@ export interface ChatResponse {
   agent_steps: any[];
   rate_limited?: boolean;  // 達使用上限時為 true
   retry_after?: number;    // 還要等幾秒可再用（限流時）
+  captcha_required?: boolean;  // 需先完成人機驗證
 }
 
 export async function chatbotQuery(message: string, answerType: string = 'ans_summary') {
@@ -236,4 +237,11 @@ export async function chatbotQuery(message: string, answerType: string = 'ans_su
 
 export async function chatbotClear() {
   return apiFetch<{ success: boolean }>(`${BASE}/chatbot/clear/`, { method: 'POST' });
+}
+
+export async function chatbotVerify(token: string) {
+  return apiFetch<{ success: boolean }>(`${BASE}/chatbot/verify/`, {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
 }

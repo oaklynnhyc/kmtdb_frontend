@@ -3,9 +3,10 @@ import {
   Send, Bot, User, ChevronDown, ChevronUp, Database, FileText,
   PanelLeftClose, PanelLeftOpen, MessageCircle, Check, ChevronsDownUp, ChevronsUpDown, Clock, AlertCircle,
 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Markdown } from "@/components/ui/markdown";
-import { chatbotQuery, chatbotClear } from "@/services/api";
+import { chatbotQuery, chatbotClear, chatbotVerify } from "@/services/api";
 
 type AnswerType = "ans_summary" | "ans_with_gpdb";
 
@@ -140,6 +141,9 @@ export function ChatBot() {
   const [answerType, setAnswerType] = useState<AnswerType>("ans_summary");
   // 限流：rateLimitUntil 為可再次提問的 epoch 毫秒；nowTs 每秒更新以驅動倒數
   const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  // Turnstile：sitekey 沒設（本機無 captcha）就視為已通過，不擋開發
+  const captchaEnabled = !!import.meta.env.VITE_TURNSTILE_SITEKEY;
+  const [captchaOk, setCaptchaOk] = useState(!captchaEnabled);
   const [nowTs, setNowTs] = useState(() => Date.now());
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
@@ -260,7 +264,7 @@ export function ChatBot() {
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isTyping || isRateLimited) return;
+    if (!inputValue.trim() || isTyping || isRateLimited || !captchaOk) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -333,6 +337,18 @@ export function ChatBot() {
 
     try {
       const data = await chatbotQuery(query, answerType);
+      // 需人機驗證（session 過期）：重新顯示 widget
+      if (data.captcha_required) {
+        setCaptchaOk(false);
+        setMessages((prev) => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "請先完成人機驗證後再提問。",
+          timestamp: new Date(),
+          type: "serviceError",
+        }]);
+        return;
+      }
       // 達使用上限：顯示限額通知卡並啟動倒數（不計入回應時間統計）
       if (data.rate_limited) {
         const resetAt = Date.now() + (data.retry_after ?? 0) * 1000;
@@ -757,17 +773,35 @@ export function ChatBot() {
         {/* 底部輸入區 */}
         <div className="flex-shrink-0 border-t border-gray-200 bg-[var(--paper)] px-4 py-3">
           <div className="max-w-3xl mx-auto space-y-1.5">
+            {/* 人機驗證：未通過前顯示 widget、鎖住輸入 */}
+            {captchaEnabled && !captchaOk && (
+              <div className="flex justify-center py-1">
+                <Turnstile
+                  siteKey={import.meta.env.VITE_TURNSTILE_SITEKEY}
+                  onSuccess={async (token) => {
+                    try {
+                      await chatbotVerify(token);
+                      setCaptchaOk(true);
+                    } catch {
+                      setCaptchaOk(false);  // 驗證失敗，維持鎖定，widget 可重試
+                    }
+                  }}
+                />
+              </div>
+            )}
             {/* 輸入框（內嵌模式選擇器 + 送出按鈕） */}
             <div className="flex items-center rounded-lg border border-gray-300 bg-white focus-within:border-[var(--jade)] focus-within:ring-1 focus-within:ring-[var(--jade)]/20 transition-colors">
               <input
                 type="text"
                 placeholder={
-                  isRateLimited && rateLimitUntil != null
-                    ? `已達使用上限，可於 ${formatRemaining(rateLimitUntil)} 後再試`
-                    : "輸入您的問題..."
+                  !captchaOk
+                    ? "請先完成上方人機驗證"
+                    : isRateLimited && rateLimitUntil != null
+                      ? `已達使用上限，可於 ${formatRemaining(rateLimitUntil)} 後再試`
+                      : "輸入您的問題..."
                 }
                 value={inputValue}
-                disabled={isRateLimited}
+                disabled={isRateLimited || !captchaOk}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.nativeEvent.isComposing && handleSend()}
                 className="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none disabled:cursor-not-allowed"
@@ -839,7 +873,7 @@ export function ChatBot() {
               {/* 送出按鈕 */}
               <button
                 onClick={handleSend}
-                disabled={!inputValue.trim() || isTyping || isRateLimited}
+                disabled={!inputValue.trim() || isTyping || isRateLimited || !captchaOk}
                 className="flex-shrink-0 p-2 mr-1 rounded-md text-white bg-[var(--ink-dark)] hover:bg-[var(--ink-medium)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-4 h-4" />
