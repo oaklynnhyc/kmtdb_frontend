@@ -661,7 +661,8 @@ export function RosterSearch() {
               </TabsContent>
               <TabsContent value="term" className="mt-4">
                 <QuickHint items={[
-                  '點選下拉選單選擇屆次或組織。',
+                  '點選搜尋欄或輸入關鍵字，將顯示符合條件的下拉選單。',
+                  '如需重新搜尋，請刪除目前內容後重新選擇或輸入關鍵字。'
                 ]} />
                 <TermCombobox
                   value={termQuery}
