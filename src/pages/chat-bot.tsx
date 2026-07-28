@@ -508,10 +508,6 @@ export function ChatBot() {
               <PanelLeftOpen className="w-4.5 h-4.5" />
             )}
           </button>
-          <div className="ml-3 flex items-center space-x-2 seal-left">
-            <Bot className="w-4.5 h-4.5 text-[var(--jade)]" />
-            {/* <span className="text-sm font-medium ink-text">檢索系統AI深度探索</span> */}
-          </div>
         </div>
 
         {/* 對話訊息區 */}
