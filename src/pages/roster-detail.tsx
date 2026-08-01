@@ -32,29 +32,6 @@ const FIELD_CATEGORY: Record<string, string> = {
 /** 分類顯示順序 */
 const CATEGORY_ORDER = ['人物資訊', '組織與職位', '任期時間', '任用與異動', '其他'];
 
-const DEFAULT_DETAIL_COLUMNS: ColumnConfig[] = [
-  { column_name: '組織',           field_name: '組織',           display_label: '組織',           sort_order_list: 1,  sort_order_detail: 1  },
-  { column_name: '一級單位',        field_name: '一級單位',        display_label: '一級單位',        sort_order_list: 2,  sort_order_detail: 2  },
-  { column_name: '二級單位',        field_name: '二級單位',        display_label: '二級單位',        sort_order_list: 3,  sort_order_detail: 3  },
-  { column_name: '三級單位',        field_name: '三級單位',        display_label: '三級單位',        sort_order_list: 4,  sort_order_detail: 4  },
-  { column_name: '職位',           field_name: '職位',           display_label: '職位',           sort_order_list: 5,  sort_order_detail: 5  },
-  { column_name: '屆次',           field_name: '屆次',           display_label: '屆次',           sort_order_list: 6,  sort_order_detail: 6  },
-  { column_name: '起始日期',        field_name: '起始日期',        display_label: '起始日期',        sort_order_list: 7,  sort_order_detail: 7  },
-  { column_name: '結束日期',        field_name: '結束日期',        display_label: '結束日期',        sort_order_list: 8,  sort_order_detail: 8  },
-  { column_name: '任用依據',        field_name: '任用依據',        display_label: '任用依據',        sort_order_list: 9,  sort_order_detail: 9  },
-  { column_name: '離職依據',        field_name: '離職依據',        display_label: '離職依據',        sort_order_list: 10, sort_order_detail: 10 },
-  { column_name: '產生方式',        field_name: '產生方式',        display_label: '產生方式',        sort_order_list: 11, sort_order_detail: 11 },
-  { column_name: '兼／代',         field_name: '兼_代',          display_label: '兼／代',         sort_order_list: 12, sort_order_detail: 12 },
-  { column_name: '序位',           field_name: '序位',           display_label: '序位',           sort_order_list: 13, sort_order_detail: 13 },
-  { column_name: '離職原因',        field_name: '離職原因',        display_label: '離職原因',        sort_order_list: 14, sort_order_detail: 14 },
-  { column_name: '調／升任單位職稱',  field_name: '調_升任單位職稱',  display_label: '調／升任單位職稱',  sort_order_list: 15, sort_order_detail: 15 },
-  { column_name: '前任姓名',        field_name: '前任姓名',        display_label: '前任姓名',        sort_order_list: 16, sort_order_detail: 16 },
-  { column_name: '後任姓名',        field_name: '後任姓名',        display_label: '後任姓名',        sort_order_list: 17, sort_order_detail: 17 },
-  { column_name: '地點備註',        field_name: '地點備註',        display_label: '地點備註',        sort_order_list: 18, sort_order_detail: 18 },
-  { column_name: '其他備註',        field_name: '其他備註',        display_label: '其他備註',        sort_order_list: 19, sort_order_detail: 19 },
-  { column_name: '其他出處來源',     field_name: '其他出處來源',     display_label: '其他出處來源',     sort_order_list: 20, sort_order_detail: 20 },
-];
-
 export function RosterDetail() {
   const { id } = useParams<{ id: string }>();
   const [rawRecord, setRawRecord] = useState<Record<string, any> | null>(null);
@@ -66,7 +43,7 @@ export function RosterDetail() {
   useEffect(() => {
     getColumns()
       .then(data => setDetailColumns(data.detail))
-      .catch(() => {});
+      .catch(err => setError(err.message || '載入欄位設定失敗'));
   }, []);
 
   useEffect(() => {
@@ -165,7 +142,7 @@ export function RosterDetail() {
               <CardContent className="space-y-0 p-4 sm:p-6">
                 {/* 動態欄位：依分類群組顯示，分類順序與 search 頁一致 */}
                 {(() => {
-                  const cols = detailColumns.length > 0 ? detailColumns : DEFAULT_DETAIL_COLUMNS;
+                  const cols = detailColumns;
 
                   // 將欄位依分類分組；所有欄位皆顯示。無資料時：
                   //   「其他」區塊留白，其餘比照簡目顯示「—」
