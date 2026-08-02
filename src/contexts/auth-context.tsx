@@ -36,14 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    // ── 測試帳號（前端 only，不經過後端 API）──────────────
-    // TODO: 接上正式後端後刪除此區塊
-    if (username === 'test' && password === 'test') {
-      setState({ isAuthenticated: true, username: 'test', isLoading: false });
-      return;
-    }
-    // ── 測試帳號結束 ─────────────────────────────────────
-
     const data = await apiLogin(username, password);
     setState({
       isAuthenticated: true,
