@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { Home, Database, History, BookOpen, Bot, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 

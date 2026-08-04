@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router';
 import { ArrowLeft, FileText, User, Loader2 } from 'lucide-react';
 import { getRecord, getColumns, type ColumnConfig } from '@/services/api';
 import { mapDjangoToRoster } from '@/services/field-mapping';

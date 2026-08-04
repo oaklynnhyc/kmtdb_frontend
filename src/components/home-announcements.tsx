@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Pin, ChevronRight } from 'lucide-react';
 import { getAnnouncements, HOME_ANNOUNCEMENT_LIMIT, type Announcement } from '@/services/announcements';
 

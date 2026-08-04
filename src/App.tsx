@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Navigation } from '@/components/layout/navigation';
 import { Footer } from '@/components/layout/footer';

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Construction, ArrowLeft } from 'lucide-react';
 
 export function RecordDetail() {
