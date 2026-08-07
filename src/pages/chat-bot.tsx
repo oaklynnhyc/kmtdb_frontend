@@ -294,12 +294,9 @@ export function ChatBot() {
       console.error("Chatbot 請求失敗：", err);
       const isNetworkError =
         err instanceof TypeError || /fetch|network|failed to fetch/i.test(err?.message || "");
-      const friendly =
-        err?.name === "AuthError"
-          ? "登入狀態已失效，請重新登入後再使用AI深度探索。"
-          : isNetworkError
-            ? "目前無法連線到伺服器，請稍候再試。"
-            : "AI深度探索暫時無法使用，請稍後再試。";
+      const friendly = isNetworkError
+        ? "目前無法連線到伺服器，請稍候再試。"
+        : "AI深度探索暫時無法使用，請稍後再試。";
       setMessages((prev) => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",

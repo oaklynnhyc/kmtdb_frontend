@@ -485,18 +485,20 @@ export function RosterSearch() {
         isValueOperators: hasFilterSearch ? activeFilterConditions.map(c => toDjangoOperator(c.logicOperator)) : undefined,
       };
 
-      // 後端每頁上限為 300，故分頁抓取：先抓第 1 頁取得總筆數，
-      // 其餘頁面並行抓取後合併，前端再自行排序＋分頁（不再受 300 筆限制）。
-      const BACKEND_MAX_PAGE_SIZE = 300;
-      const first = await searchRecords({ ...searchPayload, page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
+      // 後端沒有單頁上限，這裡自行以 300 筆為單位分頁抓取：先抓第 1 頁取得總筆數，
+      // 其餘頁面並行抓取後合併，前端再自行排序＋分頁。
+      // TODO: 全庫全中時約 40 個並行請求 ＋ 12,000 筆 JSON。資料量達 5 萬筆以上時，
+      //       把排序（含 sortByRelevance 關聯性算分）搬到後端 SQL，前端改真分頁。
+      const BACKEND_PAGE_SIZE = 300;
+      const first = await searchRecords({ ...searchPayload, page: 1, pageSize: BACKEND_PAGE_SIZE });
       const total = first.count;
       let merged = first.results as Record<string, any>[];
 
-      const totalPages = Math.ceil(total / BACKEND_MAX_PAGE_SIZE);
+      const totalPages = Math.ceil(total / BACKEND_PAGE_SIZE);
       if (totalPages > 1) {
         const restPages = await Promise.all(
           Array.from({ length: totalPages - 1 }, (_, i) =>
-            searchRecords({ ...searchPayload, page: i + 2, pageSize: BACKEND_MAX_PAGE_SIZE })
+            searchRecords({ ...searchPayload, page: i + 2, pageSize: BACKEND_PAGE_SIZE })
           )
         );
         for (const pageData of restPages) {

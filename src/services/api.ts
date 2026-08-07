@@ -3,10 +3,8 @@
  *
  * 完整 API 規格請參考 API_SPEC.md。
  *
- * 認證機制：
- * - 使用 Django SessionAuthentication
- * - CSRF Token 從 cookie 讀取，放入 X-CSRFToken header
- * - 所有請求帶 credentials: 'include'
+ * 前台全站免登入（2026-08-05），無認證端點。
+ * CSRF Token 從 cookie 讀取，放入 X-CSRFToken header；所有請求帶 credentials: 'include'。
  */
 
 // ---------- 設定 ----------
@@ -34,10 +32,6 @@ async function apiFetch<T = any>(url: string, options: RequestInit = {}): Promis
     ...options,
   });
 
-  if (response.status === 401 || response.status === 403) {
-    throw new AuthError('未登入或權限不足');
-  }
-
   if (!response.ok) {
     const text = await response.text();
     throw new Error(`API Error ${response.status}: ${text}`);
@@ -46,34 +40,12 @@ async function apiFetch<T = any>(url: string, options: RequestInit = {}): Promis
   return response.json();
 }
 
-export class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
-
-// ========== 認證 API ==========
-// 詳見 API_SPEC.md 第 1 節
-
-export async function login(username: string, password: string) {
-  return apiFetch<{ username: string; is_staff: boolean }>(`${BASE}/api/auth/login/`, {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-}
-
-export async function checkAuthStatus() {
-  // 不使用 apiFetch：未登入時後端回 200 + {authenticated: false}
-  // 若使用 apiFetch，萬一後端誤回 401 會導致 AuthProvider 初始化失敗
-  const response = await fetch(`${BASE}/api/auth/status/`, { credentials: 'include' });
-  return response.json() as Promise<{ authenticated: boolean; username: string | null }>;
-}
-
-export async function logout() {
-  return apiFetch<{ success: boolean }>(`${BASE}/api/auth/logout/`, {
-    method: 'POST',
-  });
+// ========== CSRF ==========
+// 前台已無登入。正式環境的 csrftoken 由 SPA 的 HTML 發出（Django 的 ensure_csrf_cookie），
+// 但 npm run dev 時 HTML 由 Vite 提供、不經過 Django，需要主動打這支才拿得到 token，
+// 否則 Chatbot 的所有 POST 都會被 CSRF 擋下。
+export async function ensureCsrfCookie() {
+  await fetch(`${BASE}/api/csrf/`, { credentials: 'include' });
 }
 
 // ========== 搜尋 API ==========

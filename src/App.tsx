@@ -1,8 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router';
-import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Navigation } from '@/components/layout/navigation';
 import { Footer } from '@/components/layout/footer';
-import { LoginPage } from '@/pages/login-page';
 import { HomePage } from '@/pages/home-page';
 import { RosterSearch } from '@/pages/roster-search';
 import { RosterDetail } from '@/pages/roster-detail';
@@ -12,29 +11,7 @@ import { RecordDetail } from '@/pages/record-detail';
 import { ChatBot } from '@/pages/chat-bot';
 import { AnnouncementsList } from '@/pages/announcements-list';
 import { AnnouncementDetail } from '@/pages/announcement-detail';
-
-function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen ink-wash-bg flex items-center justify-center">
-        <div className="paper-card rounded-lg p-12 text-center seal-corner">
-          <div className="animate-pulse">
-            <div className="w-12 h-12 rounded-full bg-[#d4af37]/30 mx-auto mb-4" />
-            <p className="ink-text">載入中...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
-}
+import { ensureCsrfCookie } from '@/services/api';
 
 function LayoutWithNav() {
   return (
@@ -57,32 +34,31 @@ function LayoutWithNav() {
 
 export default function App() {
   const basename = import.meta.env.VITE_BASE_PATH ?? '';
+
+  // 正式環境的 csrftoken 隨 SPA 的 HTML 一起發；npm run dev 時 HTML 由 Vite 提供，
+  // 需要主動取一次，否則 Chatbot 的 POST 會被 CSRF 擋下。
+  useEffect(() => {
+    ensureCsrfCookie().catch(() => {});
+  }, []);
+
   return (
     <BrowserRouter basename={basename}>
-      <AuthProvider>
-        <Routes>
-          {/* 公開路由 */}
-          <Route path="/login" element={<LoginPage />} />
+      <Routes>
+        <Route element={<LayoutWithNav />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/history" element={<OrganizationalHistory />} />
+          <Route path="/editorial" element={<EditorialNotes />} />
+          <Route path="/announcements" element={<AnnouncementsList />} />
+          <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+          <Route path="/registry" element={<RosterSearch />} />
+          <Route path="/roster/:id" element={<RosterDetail />} />
+          <Route path="/record/:id" element={<RecordDetail />} />
+          <Route path="/chat" element={<ChatBot />} />
+        </Route>
 
-          {/* 受保護路由 */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<LayoutWithNav />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/history" element={<OrganizationalHistory />} />
-              <Route path="/editorial" element={<EditorialNotes />} />
-              <Route path="/announcements" element={<AnnouncementsList />} />
-              <Route path="/announcements/:id" element={<AnnouncementDetail />} />
-              <Route path="/registry" element={<RosterSearch />} />
-              <Route path="/roster/:id" element={<RosterDetail />} />
-              <Route path="/record/:id" element={<RecordDetail />} />
-              <Route path="/chat" element={<ChatBot />} />
-            </Route>
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+        {/* Fallback：含舊的 /login，一律導回首頁 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
